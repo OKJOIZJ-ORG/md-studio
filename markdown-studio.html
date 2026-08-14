@@ -1,0 +1,1817 @@
+<!DOCTYPE html>
+<!-- MD Studio v1.4.0 · 2026-08-15 -->
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MD Studio — 마크다운 에디터</title>
+<style>
+:root{
+  --ease-out:cubic-bezier(0.23,1,0.32,1);
+  --text:#2C2C2B; --text-sec:#7D7A75;
+  --canvas:#FFFFFF; --surface:#F9F8F7; --surface2:#F0EFED;
+  --border:#E6E5E3;
+  --accent:#2783DE; --accent-soft:#E5F2FC;
+  --green:#46A171; --green-soft:#E8F1EC;
+  --orange:#D5803B; --orange-soft:#FBEBDE;
+  --red:#E56458; --red-soft:#FCE9E7;
+  --purple:#8A63D2;
+  --raised:#FFFFFF;
+  --find-bg:rgba(255,199,64,0.52); --find-cur-bg:rgba(255,141,32,0.62);
+  --memo-bg:rgba(138,99,210,0.15); --memo-line:#8A63D2;
+  --ed-font:ui-monospace,"SF Mono",Menlo,Consolas,"Noto Sans Mono CJK KR",monospace;
+  --ed-size:14px; --ed-lh:1.7;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR","Malgun Gothic",sans-serif;
+  --t0:#2783DE; --t1:#46A171; --t2:#D5803B; --t3:#E56458;
+  --t4:#8A63D2; --t5:#C14D8F; --t6:#0F8B8D; --t7:#9A7B00;
+}
+[data-theme="dark"]{
+  --text:#FFFFFF; --text-sec:rgba(255,255,255,0.65);
+  --canvas:#191919; --surface:#202020; --surface2:#2A2A28;
+  --border:rgba(255,255,255,0.13);
+  --accent:#5E9FE8; --accent-soft:rgba(94,159,232,0.14);
+  --green:#72BC8F; --green-soft:rgba(114,188,143,0.14);
+  --orange:#DE9255; --orange-soft:rgba(222,146,85,0.16);
+  --red:#E97366; --red-soft:rgba(233,115,102,0.14);
+  --purple:#BF8EDA;
+  --raised:#383836;
+  --find-bg:rgba(240,196,96,0.36); --find-cur-bg:rgba(226,150,80,0.56);
+  --memo-bg:rgba(191,142,218,0.20); --memo-line:#BF8EDA;
+  --t0:#5E9FE8; --t1:#72BC8F; --t2:#DE9255; --t3:#E97366;
+  --t4:#BF8EDA; --t5:#DF84A8; --t6:#4FB9C9; --t7:#EAC26B;
+}
+*{box-sizing:border-box;}
+[hidden]{display:none !important;}
+html,body{height:100%;margin:0;}
+body{
+  display:flex;flex-direction:column;
+  background:var(--canvas);color:var(--text);
+  font-family:var(--sans);
+  transition:background-color 160ms ease,color 160ms ease;
+}
+body.dragging{user-select:none;cursor:col-resize;}
+
+/* ── Top bar ─────────────────────────────── */
+.topbar{
+  flex:0 0 auto;height:48px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 14px;border-bottom:1px solid var(--border);
+}
+.brand{display:flex;align-items:center;gap:8px;min-width:0;}
+.brand svg{color:var(--accent);flex:0 0 auto;}
+.brand-name{font-weight:700;font-size:14px;letter-spacing:-0.01em;}
+.brand-sub{font-size:12px;color:var(--text-sec);white-space:nowrap;}
+.actions{display:flex;align-items:center;gap:6px;}
+.tb-div{flex:0 0 auto;width:1px;height:18px;background:var(--border);margin:0 3px;}
+
+/* ── Control primitive ──────────────────────────────────────────────
+   모든 버튼은 고정 높이 + flex 정중앙 + line-height:1 로만 정렬한다.
+   상하 padding 을 아예 쓰지 않으므로 위아래 여백이 어긋날 수 없다.
+   아이콘·캐럿·숫자도 모두 flex item 이라 baseline 흔들림이 없다.      */
+.ctl{
+  --ctl-h:30px;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  box-sizing:border-box;flex:0 0 auto;
+  height:var(--ctl-h);min-width:var(--ctl-h);padding:0 10px;margin:0;
+  border:1px solid var(--border);border-radius:8px;
+  background:var(--canvas);color:var(--text);
+  font-family:var(--sans);font-size:13px;font-weight:500;line-height:1;
+  letter-spacing:-0.003em;white-space:nowrap;cursor:pointer;
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
+  transition:background-color 120ms ease,border-color 120ms ease,color 120ms ease,box-shadow 120ms ease,transform 160ms var(--ease-out);
+}
+.ctl>svg{display:block;flex:0 0 auto;}
+.lbl{display:block;line-height:1;}
+.ctl .chev{display:block;flex:0 0 auto;opacity:0.8;transition:transform 160ms var(--ease-out);}
+.ctl[aria-expanded="true"] .chev{transform:rotate(180deg);}
+.ctl.icon{padding:0;width:var(--ctl-h);}
+@media (hover:hover) and (pointer:fine){
+  .ctl:hover{background:var(--surface);border-color:color-mix(in srgb,var(--text-sec) 30%,var(--border));}
+}
+.ctl:active{transform:scale(0.97);}
+.ctl:focus-visible{outline:0;box-shadow:0 0 0 2px var(--canvas),0 0 0 4px color-mix(in srgb,var(--accent) 42%,transparent);}
+.ctl.quiet{background:transparent;border-color:transparent;color:var(--text-sec);}
+@media (hover:hover) and (pointer:fine){
+  .ctl.quiet:hover{background:var(--surface2);border-color:transparent;color:var(--text);}
+}
+.ctl.quiet[aria-pressed="true"],.ctl.quiet[aria-expanded="true"]{background:var(--accent-soft);border-color:transparent;color:var(--accent);}
+.ctl.solid{background:var(--accent);border-color:transparent;color:#FFFFFF;font-weight:600;}
+@media (hover:hover) and (pointer:fine){
+  .ctl.solid:hover{background:color-mix(in srgb,var(--accent) 86%,#000);border-color:transparent;}
+}
+.ctl .count{
+  display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
+  min-width:16px;height:16px;padding:0 4px;border-radius:999px;
+  background:var(--accent);color:#FFFFFF;
+  font-size:10px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;
+}
+#btnTheme .ico-moon{display:none;}
+[data-theme="dark"] #btnTheme .ico-sun{display:none;}
+[data-theme="dark"] #btnTheme .ico-moon{display:block;}
+
+/* 세그먼트 토글: 테두리는 컨테이너에 한 번만, 내부는 칩 */
+.seg{
+  display:inline-flex;align-items:center;gap:2px;flex:0 0 auto;
+  box-sizing:border-box;height:30px;padding:2px;
+  border:1px solid var(--border);border-radius:9px;background:var(--surface);
+}
+.seg .ctl{
+  --ctl-h:24px;
+  padding:0 9px;border-radius:7px;border-color:transparent;background:transparent;
+  color:var(--text-sec);
+}
+.seg .ctl svg{opacity:0.8;}
+@media (hover:hover) and (pointer:fine){
+  .seg .ctl:hover{background:color-mix(in srgb,var(--text-sec) 12%,transparent);border-color:transparent;color:var(--text);}
+}
+.seg .ctl[aria-pressed="true"]{
+  background:var(--raised);color:var(--accent);border-color:transparent;
+  box-shadow:0 1px 2px rgba(0,0,0,0.06);
+}
+.seg .ctl[aria-pressed="true"] svg{opacity:1;}
+[data-theme="dark"] .seg .ctl[aria-pressed="true"]{box-shadow:none;}
+
+@media (pointer:coarse){
+  .ctl{--ctl-h:40px;}
+  .seg{height:44px;padding:3px;}
+  .seg .ctl{--ctl-h:38px;}
+}
+
+/* ── Save format menu ───────────────────── */
+.save-menu{
+  position:fixed;top:44px;right:14px;z-index:90;width:210px;
+  padding:5px;background:var(--canvas);border:1px solid var(--border);border-radius:10px;
+  box-shadow:0 1px 2px rgba(0,0,0,0.06),0 8px 24px rgba(0,0,0,0.12);
+  opacity:0;transform:scale(0.97) translateY(-4px);transform-origin:top right;pointer-events:none;
+  transition:opacity 160ms var(--ease-out),transform 160ms var(--ease-out);
+}
+[data-theme="dark"] .save-menu{box-shadow:0 1px 2px rgba(0,0,0,0.4),0 8px 24px rgba(0,0,0,0.45);}
+.save-menu.open{opacity:1;transform:scale(1) translateY(0);pointer-events:auto;}
+.save-menu-title{padding:5px 8px 6px;font-size:11px;font-weight:600;color:var(--text-sec);}
+.save-option{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  padding:7px 8px;border:0;border-radius:7px;background:none;color:var(--text);
+  font:12.5px var(--sans);cursor:pointer;text-align:left;
+  transition:background-color 120ms ease,transform 160ms var(--ease-out);
+}
+@media (hover:hover){.save-option:hover{background:var(--surface);}}
+.save-option:active{transform:scale(0.98);}
+.save-option code{font:11.5px var(--ed-font);color:var(--text-sec);}
+.save-option[aria-current="true"]::before{content:'✓';color:var(--accent);margin-right:7px;}
+.save-option[aria-current="true"] span{margin-right:auto;}
+
+/* ── Workspace split ─────────────────────── */
+.workspace{flex:1;display:flex;min-height:0;}
+.pane{display:flex;flex-direction:column;min-width:0;min-height:0;}
+.editor-pane{flex:0 0 50%;}
+.preview-pane{flex:1;}
+.divider{flex:0 0 6px;cursor:col-resize;position:relative;}
+.divider::before{
+  content:'';position:absolute;left:2px;top:0;bottom:0;width:1px;
+  background:var(--border);transition:background-color 120ms ease;
+}
+@media (hover:hover){.divider:hover::before{background:var(--accent);}}
+.divider:active::before{background:var(--accent);}
+
+.pane-header{
+  flex:0 0 auto;height:34px;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:0 10px 0 14px;background:var(--surface);border-bottom:1px solid var(--border);
+  font-size:12px;font-weight:600;color:var(--text-sec);letter-spacing:0.01em;line-height:1;
+}
+.pane-header>span{display:block;line-height:1;}
+/* 상태 배지도 버튼과 동일한 정렬 계산: 고정 높이 + flex 정중앙 + line-height:1 */
+.tag-badge{
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  box-sizing:border-box;flex:0 0 auto;height:22px;padding:0 9px;margin:0;
+  border:0;border-radius:999px;
+  font-family:var(--sans);font-size:12px;font-weight:600;line-height:1;
+  white-space:nowrap;-webkit-font-smoothing:antialiased;
+}
+.tag-badge>svg{display:block;flex:0 0 auto;}
+.tag-badge .bl{display:block;line-height:1;font-variant-numeric:tabular-nums;}
+.tag-badge.ok{color:var(--green);background:var(--green-soft);cursor:default;}
+.tag-badge.warn{
+  color:var(--orange);background:var(--orange-soft);cursor:pointer;
+  transition:transform 160ms var(--ease-out),background-color 120ms ease;
+}
+@media (hover:hover){.tag-badge.warn:hover{background:color-mix(in srgb,var(--orange) 24%,transparent);}}
+.tag-badge.warn:active{transform:scale(0.96);}
+.tag-badge .chev{display:block;flex:0 0 auto;opacity:0.7;transition:transform 160ms var(--ease-out);}
+.tag-badge[aria-expanded="true"] .chev{transform:rotate(180deg);}
+
+/* ── Tag issue panel ───────────────────── */
+.editor-pane{position:relative;}
+.tag-panel{
+  position:absolute;top:38px;right:10px;z-index:30;
+  min-width:230px;max-width:min(330px,90vw);max-height:280px;overflow-y:auto;
+  background:var(--canvas);border:1px solid var(--border);border-radius:10px;
+  box-shadow:0 1px 2px rgba(0,0,0,0.06),0 8px 24px rgba(0,0,0,0.10);
+  padding:5px;transform-origin:top right;
+  opacity:0;transform:scale(0.97) translateY(-4px);pointer-events:none;
+  transition:opacity 160ms var(--ease-out),transform 160ms var(--ease-out);
+}
+[data-theme="dark"] .tag-panel{box-shadow:0 1px 2px rgba(0,0,0,0.4),0 8px 24px rgba(0,0,0,0.45);}
+.tag-panel.open{opacity:1;transform:scale(1) translateY(0);pointer-events:auto;}
+.tag-panel-title{padding:5px 9px 6px;font-size:11px;font-weight:600;color:var(--text-sec);letter-spacing:0.02em;}
+.tag-item{
+  display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;
+  padding:6px 8px;border:0;background:none;border-radius:7px;cursor:pointer;
+  font-family:var(--sans);font-size:12.5px;color:var(--text);text-align:left;
+  transition:background-color 120ms ease,transform 160ms var(--ease-out);
+}
+@media (hover:hover){.tag-item:hover{background:var(--surface);}}
+.tag-item:active{transform:scale(0.98);}
+.tag-item-left{display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden;}
+.tag-item .xml-chip{font-size:11px;padding:0 0.3em;flex:0 0 auto;}
+.tag-item-kind{font-size:11px;color:var(--orange);flex:0 0 auto;}
+.tag-item-kind.stray{color:var(--red);}
+.tag-item-line{color:var(--text-sec);font-size:11px;flex:0 0 auto;}
+
+/* 점프 대상 줄 플래시 */
+.flash-line{
+  position:absolute;left:0;right:0;height:calc(var(--ed-size)*var(--ed-lh));
+  background:color-mix(in srgb,var(--accent) 18%,transparent);
+  opacity:1;pointer-events:none;z-index:0;
+  transition:opacity 900ms ease;
+}
+
+/* ── Editor ──────────────────────────────── */
+.editor-wrap{flex:1;display:flex;min-height:0;overflow:hidden;}
+.gutter{
+  flex:0 0 46px;overflow:hidden;background:var(--canvas);
+  border-right:1px solid var(--border);user-select:none;
+}
+.gutter-inner{
+  padding:16px 8px 16px 0;text-align:right;
+  font-family:var(--ed-font);font-size:var(--ed-size);line-height:var(--ed-lh);
+  color:var(--text-sec);opacity:0.55;white-space:pre;
+  will-change:transform;
+}
+.editor-area{position:relative;flex:1;min-width:0;isolation:isolate;}
+#hl,#editor{
+  position:absolute;inset:0;margin:0;
+  padding:16px;
+  font-family:var(--ed-font);font-size:var(--ed-size);line-height:var(--ed-lh);
+  font-variant-ligatures:none;letter-spacing:0;
+  white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word;tab-size:2;
+}
+#hl{
+  z-index:0;pointer-events:none;user-select:none;
+  overflow:hidden;color:var(--text);
+}
+#hl code{font-family:inherit;font-size:inherit;position:static;}
+#editor{
+  z-index:2;background:transparent;color:transparent;caret-color:var(--accent);
+  border:0;outline:0;resize:none;overflow-y:scroll;overflow-x:hidden;
+  scrollbar-gutter:stable;cursor:text;user-select:text;overscroll-behavior:contain;
+}
+#editor:focus{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 22%,transparent);}
+#editor::placeholder{color:var(--text-sec);}
+#editor::selection{
+  background:color-mix(in srgb,var(--accent) 32%,transparent);
+  color:transparent;-webkit-text-fill-color:transparent;text-shadow:none;
+}
+
+/* syntax tokens (color only — metrics must stay identical to textarea) */
+.tk-h{color:var(--accent);}
+.tk-b{color:var(--orange);}
+.tk-i{color:var(--purple);}
+.tk-s{color:var(--text-sec);}
+.tk-link{color:var(--accent);}
+.tk-punc{color:var(--text-sec);opacity:0.75;}
+.tk-code{background:var(--surface2);border-radius:3px;}
+.tk-codeblock{background:var(--surface2);}
+.tk-tag{color:var(--tag-c);background:color-mix(in srgb,var(--tag-c) 10%,transparent);border-radius:3px;}
+
+/* tag-name → consistent color classes */
+.c0{--tag-c:var(--t0);} .c1{--tag-c:var(--t1);} .c2{--tag-c:var(--t2);} .c3{--tag-c:var(--t3);}
+.c4{--tag-c:var(--t4);} .c5{--tag-c:var(--t5);} .c6{--tag-c:var(--t6);} .c7{--tag-c:var(--t7);}
+
+/* ── Find & replace ─────────────────────── */
+.find-panel{
+  position:absolute;top:38px;right:10px;z-index:31;
+  width:min(430px,calc(100% - 20px));
+  background:var(--canvas);border:1px solid var(--border);border-radius:10px;
+  box-shadow:0 1px 2px rgba(0,0,0,0.06),0 8px 24px rgba(0,0,0,0.10);
+  padding:8px;transform-origin:top right;
+  opacity:0;transform:scale(0.98) translateY(-4px);pointer-events:none;
+  transition:opacity 160ms var(--ease-out),transform 160ms var(--ease-out);
+}
+[data-theme="dark"] .find-panel{box-shadow:0 1px 2px rgba(0,0,0,0.4),0 8px 24px rgba(0,0,0,0.45);}
+.find-panel.open{opacity:1;transform:scale(1) translateY(0);pointer-events:auto;}
+.find-row{display:flex;align-items:center;gap:6px;}
+.find-row+.find-row{margin-top:6px;}
+.find-input-wrap{position:relative;display:flex;align-items:center;flex:1;min-width:0;}
+.find-input{
+  width:100%;height:32px;padding:5px 58px 5px 9px;
+  border:1px solid var(--border);border-radius:7px;
+  background:var(--surface);color:var(--text);outline:0;
+  font:13px var(--sans);
+  transition:border-color 120ms ease,box-shadow 120ms ease;
+}
+.find-input:focus{border-color:color-mix(in srgb,var(--accent) 60%,transparent);box-shadow:0 0 0 2px var(--accent-soft);}
+.find-count{position:absolute;right:8px;font-size:10.5px;color:var(--text-sec);pointer-events:none;}
+.find-mini{
+  display:inline-flex;align-items:center;justify-content:center;gap:4px;
+  box-sizing:border-box;flex:0 0 auto;height:32px;min-width:32px;padding:0 9px;
+  border:1px solid var(--border);border-radius:7px;background:var(--canvas);color:var(--text);
+  font-family:var(--sans);font-size:13px;font-weight:500;line-height:1;cursor:pointer;
+  transition:transform 160ms var(--ease-out),background-color 120ms ease,border-color 120ms ease,box-shadow 120ms ease;
+}
+.find-mini>svg{display:block;flex:0 0 auto;}
+.find-mini:focus-visible{outline:0;box-shadow:0 0 0 2px var(--canvas),0 0 0 4px color-mix(in srgb,var(--accent) 42%,transparent);}
+@media (hover:hover){.find-mini:hover{background:var(--surface);}}
+.find-mini:active{transform:scale(0.96);}
+.find-mini.primary{background:var(--accent);border-color:transparent;color:#fff;}
+.find-case{display:flex;align-items:center;justify-content:center;gap:4px;height:32px;padding:0 7px;border-radius:7px;color:var(--text-sec);font-size:11px;line-height:1;white-space:nowrap;cursor:pointer;}
+.find-case input{accent-color:var(--accent);}
+.find-close{color:var(--text-sec);}
+
+/* ── 지속 하이라이트 (찾기 결과 · 메모) ────
+   mark 는 padding·margin·font 를 건드리지 않으므로
+   에디터 오버레이(#hl)의 글자 메트릭이 전혀 변하지 않는다. */
+mark.ov{padding:0;color:inherit;border-radius:2px;}
+#hl mark.ov-find,.preview mark.ov-find{background:var(--find-bg);color:inherit;}
+#hl mark.ov-find.cur,.preview mark.ov-find.cur{background:var(--find-cur-bg);}
+.preview mark.ov-memo{
+  background:var(--memo-bg);color:inherit;cursor:pointer;
+  box-shadow:inset 0 -2px 0 0 color-mix(in srgb,var(--memo-line) 70%,transparent);
+}
+.preview mark.ov-memo.cur{background:color-mix(in srgb,var(--memo-line) 30%,transparent);}
+
+/* ── 메모: 선택 버블 · 카드 · 목록 ──────── */
+.memo-bubble{
+  position:fixed;left:0;top:0;z-index:60;display:flex;align-items:center;gap:4px;padding:4px;
+  background:var(--canvas);border:1px solid var(--border);border-radius:10px;
+  box-shadow:0 1px 2px rgba(0,0,0,0.06),0 8px 22px rgba(0,0,0,0.12);
+  opacity:0;transform:scale(0.96) translateY(4px);pointer-events:none;
+  transition:opacity 140ms var(--ease-out),transform 140ms var(--ease-out);
+}
+.memo-bubble.open{opacity:1;transform:none;pointer-events:auto;}
+.memo-card{
+  position:fixed;left:0;top:0;z-index:62;width:min(330px,calc(100vw - 24px));padding:12px;
+  background:var(--canvas);border:1px solid var(--border);border-radius:12px;
+  box-shadow:0 1px 2px rgba(0,0,0,0.06),0 14px 34px rgba(0,0,0,0.14);
+  opacity:0;transform:scale(0.97) translateY(6px);pointer-events:none;
+  transition:opacity 160ms var(--ease-out),transform 160ms var(--ease-out);
+}
+.memo-card.open{opacity:1;transform:none;pointer-events:auto;}
+.memo-quote{
+  margin:0 0 10px;padding:7px 10px;border-radius:0 7px 7px 0;
+  border-left:2px solid color-mix(in srgb,var(--memo-line) 60%,transparent);
+  background:var(--surface);color:var(--text-sec);
+  font-size:12px;line-height:1.55;max-height:62px;overflow:hidden;word-break:break-word;
+}
+.memo-input{
+  display:block;width:100%;min-height:84px;resize:vertical;padding:9px 10px;
+  border:1px solid var(--border);border-radius:8px;
+  background:var(--surface);color:var(--text);font:13px/1.55 var(--sans);outline:0;
+  transition:border-color 120ms ease,box-shadow 120ms ease;
+}
+.memo-input:focus{border-color:color-mix(in srgb,var(--accent) 60%,transparent);box-shadow:0 0 0 2px var(--accent-soft);}
+.memo-card-actions{display:flex;align-items:center;gap:6px;margin-top:10px;}
+.memo-card-actions .grow{margin-right:auto;}
+.memo-panel{
+  position:fixed;top:44px;right:14px;z-index:59;
+  width:min(340px,calc(100vw - 24px));max-height:min(62vh,440px);overflow-y:auto;
+  padding:6px;background:var(--canvas);border:1px solid var(--border);border-radius:12px;
+  box-shadow:0 1px 2px rgba(0,0,0,0.06),0 14px 34px rgba(0,0,0,0.14);
+  transform-origin:top right;
+  opacity:0;transform:scale(0.97) translateY(-4px);pointer-events:none;
+  transition:opacity 160ms var(--ease-out),transform 160ms var(--ease-out);
+}
+.memo-panel.open{opacity:1;transform:none;pointer-events:auto;}
+[data-theme="dark"] .memo-bubble,[data-theme="dark"] .memo-card,[data-theme="dark"] .memo-panel{
+  box-shadow:0 1px 2px rgba(0,0,0,0.4),0 14px 34px rgba(0,0,0,0.5);
+}
+.memo-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 4px 8px 9px;}
+.memo-panel-title{display:flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:var(--text-sec);line-height:1;}
+.memo-empty{padding:10px 9px 14px;font-size:12.5px;line-height:1.6;color:var(--text-sec);}
+.memo-row{display:flex;align-items:flex-start;gap:2px;}
+.memo-row+.memo-row{border-top:1px solid var(--border);}
+.memo-item{
+  display:flex;flex-direction:column;align-items:stretch;gap:5px;
+  flex:1 1 auto;min-width:0;
+  padding:9px 8px 9px 10px;border:0;border-radius:9px;background:none;color:var(--text);
+  font-family:var(--sans);text-align:left;cursor:pointer;
+  transition:background-color 120ms ease;
+}
+@media (hover:hover){.memo-item:hover{background:var(--surface);}}
+.memo-item-q{display:flex;align-items:center;gap:5px;min-width:0;font-size:11px;line-height:1.2;color:var(--text-sec);}
+.memo-item-q>svg{flex:0 0 auto;display:block;}
+.memo-item-q .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.memo-item-n{
+  font-size:13px;line-height:1.5;word-break:break-word;white-space:pre-wrap;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.memo-item-x{
+  flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
+  width:26px;height:26px;margin-top:8px;
+  border:0;border-radius:7px;background:none;color:var(--text-sec);cursor:pointer;
+  transition:background-color 120ms ease,color 120ms ease;
+}
+@media (hover:hover){.memo-item-x:hover{background:var(--red-soft);color:var(--red);}}
+.memo-orphan{flex:0 0 auto;color:var(--orange);}
+
+/* ── Preview ─────────────────────────────── */
+.preview{
+  flex:1;overflow:auto;padding:24px 32px 72px;
+  font-size:16px;line-height:1.65;
+}
+.preview:empty::before{
+  content:'미리보기가 여기에 표시됩니다.';
+  color:var(--text-sec);font-size:14px;
+}
+.preview h1{font-size:1.7em;margin:0.4em 0 0.5em;line-height:1.3;letter-spacing:-0.01em;}
+.preview h2{font-size:1.42em;margin:1.2em 0 0.4em;line-height:1.35;}
+.preview h3{font-size:1.2em;margin:1.2em 0 0.35em;}
+.preview h4,.preview h5,.preview h6{font-size:1.05em;margin:1em 0 0.3em;}
+.preview p{margin:0.5em 0;}
+.preview ul,.preview ol{margin:0.4em 0;padding-left:1.5em;}
+.preview li{margin:0.15em 0;}
+.preview li.task{list-style:none;margin-left:-1.25em;}
+.preview li.task input{
+  margin-right:0.45em;accent-color:var(--accent);
+  width:14px;height:14px;transform:translateY(2px);
+}
+.preview blockquote{
+  margin:0.6em 0;padding:0.1em 0 0.1em 1em;
+  border-left:3px solid color-mix(in srgb,var(--accent) 40%,transparent);
+  color:var(--text-sec);
+}
+.preview code{
+  font-family:var(--ed-font);font-size:0.86em;
+  background:var(--surface2);padding:0.12em 0.35em;border-radius:4px;
+}
+.preview .code-block{
+  position:relative;margin:0.7em 0;padding:12px 14px;
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  overflow-x:auto;font-size:13px;line-height:1.6;
+}
+.preview .code-block code{background:none;padding:0;font-size:inherit;}
+.preview .code-lang{
+  position:absolute;top:6px;right:10px;
+  font-family:var(--sans);font-size:10px;font-weight:600;
+  color:var(--text-sec);text-transform:uppercase;letter-spacing:0.05em;
+}
+.preview table{border-collapse:collapse;margin:0.7em 0;font-size:14.5px;}
+.preview th,.preview td{border:1px solid var(--border);padding:6px 12px;text-align:left;}
+.preview th{background:var(--surface);font-weight:600;}
+.preview hr{border:0;border-top:1px solid var(--border);margin:1.4em 0;}
+.preview img{max-width:100%;border-radius:8px;}
+.preview a{color:var(--accent);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--accent) 40%,transparent);}
+
+/* XML tags as visible colored chips */
+.xml-chip{
+  font-family:var(--ed-font);font-size:0.8em;
+  padding:0 0.35em;border-radius:4px;
+  color:var(--tag-c);
+  background:color-mix(in srgb,var(--tag-c) 9%,transparent);
+  border:1px solid color-mix(in srgb,var(--tag-c) 26%,transparent);
+}
+.preview.hide-tags .xml-chip{display:none;}
+
+/* ── Status bar / toast ──────────────────── */
+.statusbar{
+  flex:0 0 auto;height:30px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 14px;border-top:1px solid var(--border);background:var(--surface);
+  font-size:12px;color:var(--text-sec);gap:12px;
+}
+.stats{display:flex;gap:14px;white-space:nowrap;min-width:0;}
+.stats.right{overflow:hidden;}
+.hint{opacity:0.75;overflow:hidden;text-overflow:ellipsis;}
+
+.toast{
+  position:fixed;left:50%;bottom:36px;transform:translateX(-50%) translateY(0);
+  background:var(--text);color:var(--canvas);
+  font-size:13px;font-weight:500;padding:8px 14px;border-radius:8px;
+  opacity:0;pointer-events:none;
+  transition:opacity 200ms var(--ease-out),transform 200ms var(--ease-out);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
+
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-thumb{
+  background:color-mix(in srgb,var(--text-sec) 32%,transparent);
+  border-radius:5px;border:2px solid var(--canvas);
+}
+::-webkit-scrollbar-track{background:transparent;}
+
+@media (max-width:760px){
+  .topbar{padding:0 8px;gap:6px;overflow:hidden;}
+  .brand{flex:0 0 18px;}
+  .brand-name,.brand-sub,.hint{display:none;}
+  .actions{min-width:0;max-width:calc(100vw - 40px);overflow-x:auto;scrollbar-width:none;}
+  .actions::-webkit-scrollbar{display:none;}
+  .workspace{flex-direction:column;}
+  .editor-pane{flex:0 0 50%;}
+  .divider{flex:0 0 6px;cursor:row-resize;}
+  .divider::before{left:0;right:0;top:2px;width:auto;height:1px;}
+  .find-panel{right:6px;width:calc(100% - 12px);}
+  .save-menu,.memo-panel{right:8px;}
+  .find-mini{padding:0 8px;}
+  .find-case{padding:0 4px;}
+}
+@media (max-width:900px){
+  .brand-sub{display:none;}
+  .actions .lbl.opt{display:none;}
+  .ctl{padding:0 9px;}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition-duration:0.01ms !important;animation:none !important;}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <svg width="17" height="17" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <rect x="1.2" y="1.2" width="13.6" height="13.6" rx="3.2" stroke="currentColor" stroke-width="1.5"/>
+      <line x1="8" y1="2.6" x2="8" y2="13.4" stroke="currentColor" stroke-width="1.5"/>
+    </svg>
+    <span class="brand-name">MD Studio</span>
+    <span class="brand-sub">마크다운 에디터</span>
+  </div>
+  <div class="actions">
+    <button class="ctl quiet" id="btnCopy" type="button" title="전체 내용을 클립보드에 복사">
+      <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="2"/><path d="M10.5 3.6V3a1.4 1.4 0 0 0-1.4-1.4H3A1.4 1.4 0 0 0 1.6 3v6.1A1.4 1.4 0 0 0 3 10.5h.6"/></svg>
+      <span class="lbl">복사</span>
+    </button>
+    <button class="ctl quiet" id="btnFind" type="button" aria-pressed="false" title="텍스트 찾기 및 대치 (Ctrl+F)">
+      <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6.9" cy="6.9" r="4.4"/><path d="M10.2 10.2 14 14"/></svg>
+      <span class="lbl">찾기</span>
+    </button>
+    <button class="ctl quiet" id="btnMemo" type="button" aria-haspopup="dialog" aria-pressed="false" title="메모 목록 — 미리보기에서 텍스트를 드래그하면 메모를 남길 수 있습니다">
+      <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.6 3.8A1.4 1.4 0 0 1 4 2.4h8a1.4 1.4 0 0 1 1.4 1.4v5.6A1.4 1.4 0 0 1 12 10.8H6.6l-2.9 2.6a.5.5 0 0 1-.8-.4v-2.2H4a1.4 1.4 0 0 1-1.4-1.4Z"/><path d="M5.4 5.6h5.2M5.4 7.9h3.2"/></svg>
+      <span class="lbl opt">메모</span>
+      <span class="count" id="memoCount" hidden>0</span>
+    </button>
+    <span class="tb-div" aria-hidden="true"></span>
+    <div class="seg" role="group" aria-label="표시 옵션">
+      <button class="ctl" id="btnTags" type="button" aria-pressed="true" title="미리보기에서 XML 태그 표시/숨기기"><span class="lbl">태그</span></button>
+      <button class="ctl" id="btnHtml" type="button" aria-pressed="false" title="안전한 표준 HTML 태그 렌더링"><span class="lbl">HTML</span></button>
+      <button class="ctl" id="btnSync" type="button" aria-pressed="true" title="에디터와 미리보기 스크롤 동기화"><span class="lbl">동기화</span></button>
+    </div>
+    <button class="ctl quiet icon" id="btnTheme" type="button" aria-label="다크 모드로 전환" title="다크 모드로 전환">
+      <svg class="ico-sun" viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="3.1"/><path d="M8 1.2v1.5M8 13.3v1.5M1.2 8h1.5M13.3 8h1.5M3.2 3.2l1.1 1.1M11.7 11.7l1.1 1.1M12.8 3.2l-1.1 1.1M4.3 11.7l-1.1 1.1"/></svg>
+      <svg class="ico-moon" viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.4 9.7A5.9 5.9 0 0 1 6.3 2.6a5.9 5.9 0 1 0 7.1 7.1Z"/></svg>
+    </button>
+    <button class="ctl solid" id="btnSave" type="button" aria-haspopup="menu" aria-expanded="false" title="파일 형식을 선택해 저장 (Ctrl+S)">
+      <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.4v6.9M5.4 6.7 8 9.3l2.6-2.6"/><path d="M2.8 11.2v1.4a1 1 0 0 0 1 1h8.4a1 1 0 0 0 1-1v-1.4"/></svg>
+      <span class="lbl">저장</span>
+      <svg class="chev" viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.6 6.4 8 9.8l3.4-3.4"/></svg>
+    </button>
+  </div>
+</header>
+<div class="save-menu" id="saveMenu" role="menu" aria-label="저장 형식" hidden>
+  <div class="save-menu-title">파일 형식 선택</div>
+  <button class="save-option" type="button" role="menuitem" data-ext="md"><span>Markdown</span><code>.md</code></button>
+  <button class="save-option" type="button" role="menuitem" data-ext="txt"><span>Plain text</span><code>.txt</code></button>
+  <button class="save-option" type="button" role="menuitem" data-ext="markdown"><span>Markdown long</span><code>.markdown</code></button>
+</div>
+
+<main class="workspace" id="workspace">
+  <section class="pane editor-pane" id="editorPane">
+    <div class="pane-header">
+      <span>마크다운</span>
+      <button type="button" class="tag-badge ok" id="tagStatus" aria-haspopup="true" aria-expanded="false" title="모든 태그가 짝을 이루고 있습니다"><svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.2 8.5l3.1 3.1 6.5-6.7"/></svg><span class="bl">태그 균형</span></button>
+    </div>
+    <div class="tag-panel" id="tagPanel" hidden>
+      <div class="tag-panel-title">태그 문제 — 클릭하면 해당 위치로 이동</div>
+      <div class="tag-list" id="tagList"></div>
+    </div>
+    <div class="find-panel" id="findPanel" role="dialog" aria-label="텍스트 찾기 및 대치" hidden>
+      <div class="find-row">
+        <div class="find-input-wrap">
+          <input class="find-input" id="findInput" type="text" autocomplete="off" spellcheck="false" placeholder="찾을 텍스트">
+          <span class="find-count" id="findCount">0/0</span>
+        </div>
+        <button class="find-mini" id="findPrev" type="button" aria-label="이전 결과" title="이전 결과 (Shift+Enter)"><svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.4 9.6 8 6l3.6 3.6"/></svg></button>
+        <button class="find-mini" id="findNext" type="button" aria-label="다음 결과" title="다음 결과 (Enter)"><svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.4 6.4 8 10l3.6-3.6"/></svg></button>
+        <button class="find-mini find-close" id="findClose" type="button" aria-label="찾기 닫기" title="닫기 (Esc)"><svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg></button>
+      </div>
+      <div class="find-row">
+        <input class="find-input" id="replaceInput" type="text" autocomplete="off" spellcheck="false" placeholder="대치할 텍스트" style="padding-right:9px">
+        <label class="find-case" title="대/소문자 구분"><input id="findCase" type="checkbox">Aa</label>
+        <button class="find-mini" id="replaceOne" type="button"><span class="lbl">대치</span></button>
+        <button class="find-mini primary" id="replaceAll" type="button"><span class="lbl">모두 대치</span></button>
+      </div>
+    </div>
+    <div class="editor-wrap">
+      <div class="gutter"><div class="gutter-inner" id="gutterInner">1</div></div>
+      <div class="editor-area">
+        <pre id="hl" aria-hidden="true"><code id="hlCode"></code></pre>
+        <textarea id="editor" spellcheck="false" wrap="soft" aria-label="마크다운 편집기" placeholder="여기에 마크다운을 입력하세요…"></textarea>
+      </div>
+    </div>
+  </section>
+  <div class="divider" id="divider" title="드래그: 비율 조절 · 더블클릭: 50:50"></div>
+  <section class="pane preview-pane">
+    <div class="pane-header"><span>미리보기</span></div>
+    <div class="preview" id="preview"></div>
+  </section>
+</main>
+
+<footer class="statusbar">
+  <div class="stats">
+    <span id="statChars">0자</span>
+    <span id="statWords">0단어</span>
+    <span id="statTokens" title="대략적인 추정치입니다 (한글≈1.4/자, 영단어≈1.3/어)">≈0 토큰</span>
+    <span id="statLines">1줄</span>
+  </div>
+  <div class="stats right">
+    <span id="statCursor">Ln 1, Col 1</span>
+    <span class="hint">Ctrl+F 찾기/대치 | Ctrl+B 굵게 | Ctrl+I 기울임 | Ctrl+S 저장 | 미리보기 드래그 → 메모 | 자동 저장됨</span>
+  </div>
+</footer>
+
+<div class="memo-bubble" id="memoBubble" hidden>
+  <button class="ctl solid" id="memoAdd" type="button" style="--ctl-h:26px" title="선택한 부분에 메모 추가">
+    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.6 3.8A1.4 1.4 0 0 1 4 2.4h8a1.4 1.4 0 0 1 1.4 1.4v5.6A1.4 1.4 0 0 1 12 10.8H6.6l-2.9 2.6a.5.5 0 0 1-.8-.4v-2.2H4a1.4 1.4 0 0 1-1.4-1.4Z"/><path d="M8 4.9v3.4M6.3 6.6h3.4"/></svg>
+    <span class="lbl">메모 추가</span>
+  </button>
+</div>
+
+<div class="memo-card" id="memoCard" role="dialog" aria-label="메모 편집" hidden>
+  <div class="memo-quote" id="memoCardQuote"></div>
+  <textarea class="memo-input" id="memoCardInput" rows="3" spellcheck="false" placeholder="메모를 입력하세요 — Ctrl+Enter 저장, Esc 닫기"></textarea>
+  <div class="memo-card-actions">
+    <button class="ctl quiet grow" id="memoDelete" type="button" style="--ctl-h:26px" title="이 메모 삭제">
+      <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.4 5.2h9.2M6.2 5.2V3.9a.9.9 0 0 1 .9-.9h1.8a.9.9 0 0 1 .9.9v1.3M4.7 5.2l.5 7a1 1 0 0 0 1 .9h3.6a1 1 0 0 0 1-.9l.5-7"/></svg>
+      <span class="lbl">삭제</span>
+    </button>
+    <button class="ctl quiet" id="memoCancel" type="button" style="--ctl-h:26px"><span class="lbl">취소</span></button>
+    <button class="ctl solid" id="memoSave" type="button" style="--ctl-h:26px"><span class="lbl">저장</span></button>
+  </div>
+</div>
+
+<div class="memo-panel" id="memoPanel" role="dialog" aria-label="메모 목록" hidden>
+  <div class="memo-panel-head">
+    <span class="memo-panel-title">메모 <span id="memoPanelCount">0</span></span>
+    <button class="ctl quiet icon" id="memoPanelClose" type="button" style="--ctl-h:22px" aria-label="메모 목록 닫기" title="닫기 (Esc)">
+      <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg>
+    </button>
+  </div>
+  <div class="memo-list" id="memoList"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const editor = $('#editor'), hl = $('#hl'), hlCode = $('#hlCode');
+const gutterInner = $('#gutterInner'), preview = $('#preview'), toast = $('#toast');
+const tagStatus = $('#tagStatus');
+const tagPanel = $('#tagPanel'), tagList = $('#tagList');
+const editorArea = document.querySelector('.editor-area');
+const statChars = $('#statChars'), statWords = $('#statWords'), statTokens = $('#statTokens');
+const statLines = $('#statLines'), statCursor = $('#statCursor');
+const btnCopy = $('#btnCopy'), btnFind = $('#btnFind'), btnSave = $('#btnSave'), btnTags = $('#btnTags');
+const btnHtml = $('#btnHtml'), btnSync = $('#btnSync'), btnTheme = $('#btnTheme'), btnMemo = $('#btnMemo');
+const memoCount = $('#memoCount'), memoBubble = $('#memoBubble'), memoAdd = $('#memoAdd');
+const memoCard = $('#memoCard'), memoCardQuote = $('#memoCardQuote'), memoCardInput = $('#memoCardInput');
+const memoDelete = $('#memoDelete'), memoCancel = $('#memoCancel'), memoSave = $('#memoSave');
+const memoPanel = $('#memoPanel'), memoPanelClose = $('#memoPanelClose'), memoPanelCount = $('#memoPanelCount');
+const memoList = $('#memoList');
+
+/* 인라인 SVG 아이콘 (문자 기호 대신 — 버튼 내부 정렬 오차의 원인 제거) */
+const ICON = {
+  check:'<svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.4 8.6l2.9 2.9 6.3-6.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  warn:'<svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2.9l5.3 9.2H2.7L8 2.9z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 6.4v2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="10.6" r="0.7" fill="currentColor"/></svg>',
+  chev:'<svg class="chev" width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4.6 6.6L8 10l3.4-3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  memo:'<svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M13.4 9.2a1.8 1.8 0 0 1-1.8 1.8H6.9L3.4 13.4V4.4a1.8 1.8 0 0 1 1.8-1.8h6.4a1.8 1.8 0 0 1 1.8 1.8v4.8z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>',
+  trash:'<svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.6 5.4h8.8M6.4 5.4V3.9h3.2v1.5M5 5.4l.5 7.1h5l.5-7.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+};
+const saveMenu = $('#saveMenu'), saveOptions = [...document.querySelectorAll('.save-option')];
+const findPanel = $('#findPanel'), findInput = $('#findInput'), findCount = $('#findCount');
+const replaceInput = $('#replaceInput'), findCase = $('#findCase');
+const findPrev = $('#findPrev'), findNext = $('#findNext'), findClose = $('#findClose');
+const replaceOne = $('#replaceOne'), replaceAll = $('#replaceAll');
+const workspace = $('#workspace'), editorPane = $('#editorPane'), divider = $('#divider');
+
+const LS = { content:'mdstudio.content', theme:'mdstudio.theme', sync:'mdstudio.sync', tags:'mdstudio.tags', html:'mdstudio.html', ext:'mdstudio.ext', memos:'mdstudio.memos' };
+const store = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+};
+
+let syncOn = true, tagsOn = true, htmlOn = false, saveOpen = false, saveExt = 'md';
+let lineCount = 1, saveTimer = null, toastTimer = null;
+
+/* ── utils ─────────────────────────────── */
+function escapeHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function tagIndex(name){
+  let h = 5381;
+  for (let i=0;i<name.length;i++) h = ((h<<5)+h+name.charCodeAt(i))|0;
+  return Math.abs(h)%8;
+}
+function tagChipHtml(slash,name,attrs){
+  return '<span class="xml-chip c'+tagIndex(name.toLowerCase())+'">&lt;'+slash+name+attrs+'&gt;</span>';
+}
+const HTML_STANDARD_TAGS = new Set(('html head body title base link meta style address article aside footer header h1 h2 h3 h4 h5 h6 main nav section blockquote div dd dl dt figcaption figure hr li menu ol p pre ul a abbr b bdi bdo br cite code data dfn em i kbd mark q rp rt ruby s samp small span strong sub sup time u var wbr area audio img map track video embed object picture source canvas caption col colgroup table tbody td tfoot th thead tr button datalist fieldset form input label legend meter optgroup option output progress select textarea details dialog summary slot template iframe noscript script param').split(' '));
+const HTML_VOID_TAGS = new Set(('area base br col embed hr img input link meta param source track wbr').split(' '));
+const SAFE_HTML_TAGS = new Set(('a abbr b bdi bdo blockquote br cite code data dd details dfn div dl dt em figcaption figure h1 h2 h3 h4 h5 h6 hr i img kbd li mark ol p pre q rp rt ruby s samp small span strong sub summary sup table tbody td tfoot th thead time tr u ul var wbr').split(' '));
+const SAFE_HTML_ATTRS = new Set(('alt class dir height href id lang open rel src start target title value width').split(' '));
+function safeHtmlUrl(value,kind){
+  const v=value.trim();
+  if (/^(https?:|mailto:|tel:|#|\/|\.\/|\.\.\/)/i.test(v)) return v;
+  if (kind==='src'&&/^data:image\/(?:png|jpe?g|gif|webp);base64,/i.test(v)) return v;
+  return '';
+}
+function sanitizeHtmlTag(slash,name,attrs){
+  const tag=name.toLowerCase();
+  if (!htmlOn||!SAFE_HTML_TAGS.has(tag)) return null;
+  if (slash) return HTML_VOID_TAGS.has(tag) ? '' : '</'+tag+'>';
+  let clean='';
+  const re=/([:\w-]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
+  let m;
+  while ((m=re.exec(attrs))){
+    const key=m[1].toLowerCase();
+    if (!SAFE_HTML_ATTRS.has(key)||key.startsWith('on')) continue;
+    let value=m[2]??m[3]??m[4];
+    if (value===undefined){ if (key==='open') clean+=' open'; continue; }
+    if (key==='href'||key==='src') value=safeHtmlUrl(value,key);
+    if (!value) continue;
+    if ((key==='width'||key==='height'||key==='start'||key==='value')&&!/^-?\d+$/.test(value)) continue;
+    if (key==='target'&&!/^_(?:blank|self|parent|top)$/.test(value)) continue;
+    clean+=' '+key+'="'+escapeHtml(value)+'"';
+  }
+  if (tag==='a'&&/ target="_blank"/.test(clean)&&!/ rel=/.test(clean)) clean+=' rel="noopener noreferrer"';
+  return '<'+tag+clean+'>';
+}
+
+/* ── inline markdown ───────────────────── */
+function renderInline(text){
+  const codes = [], htmlTags = [], tagChips = [];
+  let t = text.replace(/`([^`\n]+)`/g, (m,c)=>{ codes.push(c); return '\u0000'+(codes.length-1)+'\u0000'; });
+  if (htmlOn){
+    t=t.replace(/<(\/?)([A-Za-z][\w:.-]*)((?:"[^"]*"|'[^']*'|[^>"'])*)>/g,(m,sl,n,a)=>{
+      const safe=sanitizeHtmlTag(sl,n,a);
+      if (safe===null) return m;
+      htmlTags.push(safe);
+      return '\u0002'+(htmlTags.length-1)+'\u0002';
+    });
+  }
+  t = escapeHtml(t);
+  t = t.replace(/&lt;(\/?)([A-Za-z][\w:.-]*)((?:(?!&gt;)[\s\S])*?)&gt;/g, (m,sl,n,a)=>{
+    tagChips.push(tagChipHtml(sl,n,a));
+    return '\u0003'+(tagChips.length-1)+'\u0003';
+  });
+  t = t.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, '<img alt="$1" src="$2" loading="lazy">');
+  t = t.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  t = t.replace(/\*\*((?:(?!\*\*)[^\n])+)\*\*/g, '<strong>$1</strong>');
+  t = t.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+  t = t.replace(/(?<![\w*])\*([^*\n]+)\*(?![\w*])/g, '<em>$1</em>');
+  t = t.replace(/(?<![\w_])_([^_\n]+)_(?![\w_])/g, '<em>$1</em>');
+  t = t.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+  t = t.replace(/\u0000(\d+)\u0000/g, (m,i)=>'<code>'+escapeHtml(codes[+i])+'</code>');
+  t = t.replace(/\u0002(\d+)\u0002/g, (m,i)=>htmlTags[+i]);
+  t = t.replace(/\u0003(\d+)\u0003/g, (m,i)=>tagChips[+i]);
+  return t;
+}
+
+/* ── block markdown ────────────────────── */
+function isBlockStart(lines,i){
+  const l = lines[i];
+  if (/^```/.test(l)) return true;
+  if (/^#{1,6}\s/.test(l)) return true;
+  if (/^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/.test(l)) return true;
+  if (/^\s*>/.test(l)) return true;
+  if (/^\s*(?:[-*+]|\d+[.)])\s+/.test(l)) return true;
+  if (l.includes('|') && i+1<lines.length && lines[i+1].includes('|') && /^\s*\|?[\s:|-]*-[\s:|-]*$/.test(lines[i+1])) return true;
+  return false;
+}
+function splitRow(line){
+  let l = line.trim();
+  if (l.startsWith('|')) l = l.slice(1);
+  if (l.endsWith('|')) l = l.slice(0,-1);
+  return l.split(/(?<!\\)\|/).map(s=>s.trim());
+}
+function parseTable(lines,i){
+  const headers = splitRow(lines[i]);
+  const aligns = splitRow(lines[i+1]).map(c=>{
+    const l = c.startsWith(':'), r = c.endsWith(':');
+    return l&&r ? 'center' : r ? 'right' : l ? 'left' : '';
+  });
+  let j = i+2; const rows = [];
+  while (j<lines.length && lines[j].includes('|') && lines[j].trim()!==''){ rows.push(splitRow(lines[j])); j++; }
+  let h = '<table><thead><tr>';
+  headers.forEach((c,k)=>{ h += '<th'+(aligns[k]?' style="text-align:'+aligns[k]+'"':'')+'>'+renderInline(c)+'</th>'; });
+  h += '</tr></thead><tbody>';
+  rows.forEach(r=>{
+    h += '<tr>';
+    r.forEach((c,k)=>{ h += '<td'+(aligns[k]?' style="text-align:'+aligns[k]+'"':'')+'>'+renderInline(c)+'</td>'; });
+    h += '</tr>';
+  });
+  return { html:h+'</tbody></table>', next:j };
+}
+function parseList(lines,start){
+  let i = start;
+  const stack = [];
+  let root = null;
+  const closeTop = ()=>{
+    const done = stack.pop();
+    const s = done.html+'</'+done.tag+'>';
+    if (stack.length) stack[stack.length-1].html += s; else root = (root||'')+s;
+  };
+  while (i<lines.length){
+    const m = lines[i].match(/^(\s*)([-*+]|\d+[.)])\s+(.*)$/);
+    if (!m) break;
+    const indent = m[1].replace(/\t/g,'  ').length;
+    const tag = /^\d/.test(m[2]) ? 'ol' : 'ul';
+    let content = m[3];
+    let task = null;
+    const tm = content.match(/^\[( |x|X)\]\s+/);
+    if (tm){ task = tm[1].toLowerCase()==='x'; content = content.slice(tm[0].length); }
+    while (stack.length && indent < stack[stack.length-1].indent) closeTop();
+    if (!stack.length || indent > stack[stack.length-1].indent){
+      stack.push({ indent, tag, html:'<'+tag+'>' });
+    } else if (stack[stack.length-1].tag !== tag){
+      closeTop();
+      stack.push({ indent, tag, html:'<'+tag+'>' });
+    }
+    const checkbox = task===null ? '' : '<input type="checkbox" disabled'+(task?' checked':'')+'> ';
+    stack[stack.length-1].html += '<li'+(task!==null?' class="task"':'')+'>'+checkbox+renderInline(content)+'</li>';
+    i++;
+  }
+  while (stack.length) closeTop();
+  return { html:root||'', next:i };
+}
+function renderMarkdown(src){
+  const lines = src.replace(/\r\n?/g,'\n').split('\n');
+  let html = '', i = 0;
+  while (i<lines.length){
+    const line = lines[i];
+    if (line.trim()===''){ i++; continue; }
+    const fence = line.match(/^```(\w*)\s*$/);
+    if (fence){
+      const buf = []; i++;
+      while (i<lines.length && !/^```\s*$/.test(lines[i])){ buf.push(lines[i]); i++; }
+      if (i<lines.length) i++;
+      const lang = fence[1] ? '<span class="code-lang">'+escapeHtml(fence[1])+'</span>' : '';
+      html += '<pre class="code-block">'+lang+'<code>'+escapeHtml(buf.join('\n'))+'</code></pre>';
+      continue;
+    }
+    if (line.includes('|') && i+1<lines.length && lines[i+1].includes('|') && /^\s*\|?[\s:|-]*-[\s:|-]*$/.test(lines[i+1])){
+      const t = parseTable(lines,i); html += t.html; i = t.next; continue;
+    }
+    const h = line.match(/^(#{1,6})\s+(.*)$/);
+    if (h){ const n = h[1].length; html += '<h'+n+'>'+renderInline(h[2])+'</h'+n+'>'; i++; continue; }
+    if (/^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/.test(line)){ html += '<hr>'; i++; continue; }
+    if (/^\s*>/.test(line)){
+      const buf = [];
+      while (i<lines.length && /^\s*>/.test(lines[i])){ buf.push(lines[i].replace(/^\s*>\s?/,'')); i++; }
+      html += '<blockquote>'+renderMarkdown(buf.join('\n'))+'</blockquote>';
+      continue;
+    }
+    if (/^\s*(?:[-*+]|\d+[.)])\s+/.test(line)){
+      const r = parseList(lines,i); html += r.html; i = r.next; continue;
+    }
+    const buf = [line]; i++;
+    while (i<lines.length && lines[i].trim()!=='' && !isBlockStart(lines,i)){ buf.push(lines[i]); i++; }
+    html += '<p>'+buf.map(renderInline).join('<br>')+'</p>';
+  }
+  return html;
+}
+
+/* ── editor highlight (must preserve every visible char) ── */
+function highlight(src){
+  const blocks = [], codes = [];
+  let t = escapeHtml(src);
+  t = t.replace(/```(\w*)[ \t]*\n([\s\S]*?)(\n```|$)/g, (m,lang,body,close)=>{
+    blocks.push('<span class="tk-punc">```'+lang+'</span>\n<span class="tk-codeblock">'+body+'</span>'+(close?'<span class="tk-punc">'+close+'</span>':''));
+    return '\u0001'+(blocks.length-1)+'\u0001';
+  });
+  t = t.replace(/`([^`\n]+)`/g, (m,c)=>{ codes.push(c); return '\u0000'+(codes.length-1)+'\u0000'; });
+  t = t.replace(/&lt;(\/?)([A-Za-z][\w:.-]*)((?:(?!&gt;)[\s\S])*?)&gt;/g,
+    (m,sl,n)=>'<span class="tk-tag c'+tagIndex(n.toLowerCase())+'">'+m+'</span>');
+  t = t.replace(/^(#{1,6}\s.*)$/gm, '<span class="tk-h">$1</span>');
+  t = t.replace(/^(\s*(?:-{3,}|\*{3,}|_{3,})\s*)$/gm, '<span class="tk-punc">$1</span>');
+  t = t.replace(/^(\s*&gt;)/gm, '<span class="tk-punc">$1</span>');
+  t = t.replace(/^(\s*)((?:[-*+]|\d+[.)])\s)/gm, '$1<span class="tk-punc">$2</span>');
+  t = t.replace(/\*\*((?:(?!\*\*)[^\n])+)\*\*/g, '<span class="tk-b">**$1**</span>');
+  t = t.replace(/(^|[^\w])__([^_]+)__/g, '$1<span class="tk-b">__$2__</span>');
+  t = t.replace(/(?<![\w*])\*([^*\n]+)\*(?![\w*])/g, '<span class="tk-i">*$1*</span>');
+  t = t.replace(/(?<![\w_])_([^_\n]+)_(?![\w_])/g, '<span class="tk-i">_$1_</span>');
+  t = t.replace(/~~([^~]+)~~/g, '<span class="tk-s">~~$1~~</span>');
+  t = t.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<span class="tk-punc">[</span><span class="tk-link">$1</span><span class="tk-punc">]($2)</span>');
+  t = t.replace(/\u0000(\d+)\u0000/g, (m,i)=>'<span class="tk-code">`'+codes[+i]+'`</span>');
+  t = t.replace(/\u0001(\d+)\u0001/g, (m,i)=>blocks[+i]);
+  return t;
+}
+
+/* ── status & diagnostics ──────────────── */
+function updateGutter(src){
+  const n = src.split('\n').length;
+  if (n===lineCount) return;
+  lineCount = n;
+  let s = '';
+  for (let i=1;i<=n;i++) s += i+'\n';
+  gutterInner.textContent = s;
+}
+function updateStats(src){
+  const chars = src.length;
+  const words = (src.match(/\S+/g)||[]).length;
+  const lines = src.split('\n').length;
+  const cjk = (src.match(/[\u1100-\u11FF\u3130-\u318F\uAC00-\uD7AF\u4E00-\u9FFF\u3040-\u30FF]/g)||[]).length;
+  const latinWords = (src.match(/[A-Za-z0-9_'-]+/g)||[]).length;
+  const tokens = Math.ceil(cjk*1.4 + latinWords*1.3 + (chars-cjk)/20);
+  statChars.textContent = chars.toLocaleString()+'자';
+  statWords.textContent = words.toLocaleString()+'단어';
+  statTokens.textContent = '≈'+tokens.toLocaleString()+' 토큰';
+  statLines.textContent = lines.toLocaleString()+'줄';
+}
+function updateCursor(){
+  const pos = editor.selectionStart;
+  const before = editor.value.slice(0,pos);
+  const line = before.split('\n').length;
+  const col = pos - before.lastIndexOf('\n');
+  statCursor.textContent = 'Ln '+line+', Col '+col;
+}
+/* ── tag diagnostics + jump-to-tag ─────── */
+let tagIssues = [];
+let tagPanelOpen = false;
+function maskCodeForTagScan(src){
+  const mask = s=>s.replace(/[^\n]/g,' ');
+  let out = src.replace(/```[\s\S]*?(?:```|$)/g,mask);
+  out = out.replace(/(`+)([^\n]*?)\1/g,mask);
+  return out;
+}
+function findTagIssues(src){
+  const scan = maskCodeForTagScan(src);
+  const re = /<(\/?)([A-Za-z][\w:.-]*)((?:"[^"]*"|'[^']*'|[^>"'])*)>/g;
+  const stack = [], issues = [];
+  let m;
+  while ((m = re.exec(scan))){
+    const tagLower=m[2].toLowerCase();
+    if (m[0].endsWith('/>')||HTML_STANDARD_TAGS.has(tagLower)) continue;
+    if (!m[1]) stack.push({ name:m[2], offset:m.index, len:m[0].length });
+    else {
+      let idx = -1;
+      for (let k=stack.length-1;k>=0;k--){ if (stack[k].name===m[2]){ idx=k; break; } }
+      if (idx===-1) issues.push({ name:m[2], kind:'stray', offset:m.index, len:m[0].length });
+      else stack.splice(idx,1);
+    }
+  }
+  stack.forEach(s=>issues.push({ name:s.name, kind:'unclosed', offset:s.offset, len:s.len }));
+  issues.sort((a,b)=>a.offset-b.offset);
+  return issues;
+}
+function updateTagStatus(src){
+  tagIssues = findTagIssues(src);
+  if (!tagIssues.length){
+    tagStatus.innerHTML = ICON.check+'<span class="bl">태그 균형</span>';
+    tagStatus.className = 'tag-badge ok';
+    tagStatus.setAttribute('aria-expanded','false');
+    tagStatus.title = '모든 태그가 짝을 이루고 있습니다';
+    closeTagPanel();
+  } else {
+    const unclosed = tagIssues.filter(i=>i.kind==='unclosed').length;
+    const stray = tagIssues.length - unclosed;
+    const parts = [];
+    if (unclosed) parts.push('미닫힘 '+unclosed);
+    if (stray) parts.push('짝없음 '+stray);
+    tagStatus.innerHTML = ICON.warn+'<span class="bl">'+parts.join(' · ')+'</span>'+ICON.chev;
+    tagStatus.className = 'tag-badge warn';
+    tagStatus.title = '클릭하면 문제 위치 목록이 열립니다';
+    if (tagPanelOpen) renderTagPanel();
+  }
+}
+function openTagPanel(){
+  if (!tagIssues.length) return;
+  closeFindPanel(false);
+  tagPanelOpen = true;
+  renderTagPanel();
+  tagPanel.hidden = false;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>tagPanel.classList.add('open')));
+  tagStatus.setAttribute('aria-expanded','true');
+}
+function closeTagPanel(){
+  if (tagPanel.hidden) return;
+  tagPanelOpen = false;
+  tagPanel.classList.remove('open');
+  tagStatus.setAttribute('aria-expanded','false');
+  setTimeout(()=>{ if (!tagPanelOpen) tagPanel.hidden = true; },180);
+}
+tagStatus.addEventListener('click', ()=>{
+  if (!tagIssues.length) return;
+  if (tagPanelOpen) closeTagPanel(); else openTagPanel();
+});
+document.addEventListener('pointerdown', (e)=>{
+  if (tagPanelOpen && !tagPanel.contains(e.target) && !tagStatus.contains(e.target)) closeTagPanel();
+});
+document.addEventListener('keydown', (e)=>{
+  if (e.key==='Escape' && tagPanelOpen) closeTagPanel();
+});
+function renderTagPanel(){
+  tagList.innerHTML = '';
+  const src = editor.value;
+  tagIssues.slice(0,100).forEach(issue=>{
+    const line = src.slice(0,issue.offset).split('\n').length;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'tag-item';
+    const kindLabel = issue.kind==='unclosed' ? '미닫힘' : '짝없는 닫힘';
+    const chip = '<span class="xml-chip c'+tagIndex(issue.name.toLowerCase())+'">&lt;'+(issue.kind==='unclosed'?'':'/')+issue.name+'&gt;</span>';
+    btn.innerHTML = '<span class="tag-item-left">'+chip+'<span class="tag-item-kind '+(issue.kind==='unclosed'?'':'stray')+'">'+kindLabel+'</span></span><span class="tag-item-line">'+line+'줄</span>';
+    btn.addEventListener('click', ()=>{ jumpToTag(issue); closeTagPanel(); });
+    tagList.appendChild(btn);
+  });
+}
+/* 미러 div로 줄 픽셀 위치 측정 (에디터와 동일 메트릭스) */
+let mirror = null;
+function measureLineTop(offset){
+  if (!mirror){
+    mirror = document.createElement('div');
+    mirror.setAttribute('aria-hidden','true');
+    mirror.style.cssText = 'position:absolute;top:0;left:0;visibility:hidden;white-space:pre-wrap;word-break:break-word;box-sizing:border-box;';
+    editorArea.appendChild(mirror);
+  }
+  const cs = getComputedStyle(editor);
+  mirror.style.fontFamily = cs.fontFamily;
+  mirror.style.fontSize = cs.fontSize;
+  mirror.style.lineHeight = cs.lineHeight;
+  mirror.style.padding = cs.padding;
+  mirror.style.tabSize = cs.tabSize;
+  mirror.style.width = editor.clientWidth+'px';
+  mirror.textContent = editor.value.slice(0,offset);
+  const marker = document.createElement('span');
+  marker.textContent = '\u200b';
+  mirror.appendChild(marker);
+  return marker.offsetTop;
+}
+function flashLine(top){
+  const f = document.createElement('div');
+  f.className = 'flash-line';
+  f.style.top = top+'px';
+  hl.appendChild(f);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{ f.style.opacity = '0'; }));
+  const kill = ()=>{ f.remove(); };
+  f.addEventListener('transitionend', kill);
+  setTimeout(kill, 1600);
+}
+function jumpToTag(issue){
+  const top = measureLineTop(issue.offset);
+  editor.focus();
+  editor.setSelectionRange(issue.offset, issue.offset+issue.len);
+  editor.scrollTo({ top:Math.max(0, top-(editor.clientHeight/2)), behavior:'smooth' });
+  mirrorScroll();
+  flashLine(top);
+}
+
+/* ── Find & replace ────────────────────── */
+/* ── 지속 하이라이트 엔진 ──────────
+   에디터 오버레이(#hlCode)와 미리보기(.preview)의 텍스트를
+   변경하지 않고 <mark> 로만 감싸다. 문자 오프셋 기준이므로
+   글자 위치·줄바꿈이 어긋나지 않는다. */
+function unwrapMarks(root, selector){
+  if (!root) return;
+  root.querySelectorAll(selector).forEach(m=>{
+    const parent = m.parentNode;
+    if (!parent) return;
+    while (m.firstChild) parent.insertBefore(m.firstChild, m);
+    parent.removeChild(m);
+  });
+  root.normalize();
+}
+function textNodeMap(root){
+  const out = [];
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+  let offset = 0, n;
+  while ((n = walker.nextNode())){
+    const len = n.nodeValue.length;
+    if (len) out.push({node:n, start:offset, end:offset+len});
+    offset += len;
+  }
+  return out;
+}
+function paintRanges(root, ranges, opts){
+  if (!root || !ranges || !ranges.length) return;
+  const map = textNodeMap(root);
+  const byNode = new Map();
+  for (const r of ranges){
+    if (r.end <= r.start) continue;
+    for (const t of map){
+      if (t.end <= r.start || t.start >= r.end) continue;
+      const from = Math.max(r.start, t.start) - t.start;
+      const to = Math.min(r.end, t.end) - t.start;
+      if (to <= from) continue;
+      if (!byNode.has(t.node)) byNode.set(t.node, []);
+      byNode.get(t.node).push({from, to, ref:r});
+    }
+  }
+  byNode.forEach((segs, node)=>{
+    segs.sort((a,b)=> b.from - a.from);
+    for (const s of segs){
+      if (s.to > node.nodeValue.length) continue;
+      if (s.to < node.nodeValue.length) node.splitText(s.to);
+      const target = s.from > 0 ? node.splitText(s.from) : node;
+      const mk = document.createElement('mark');
+      mk.className = 'ov ' + opts.cls + ((opts.isCurrent && opts.isCurrent(s.ref)) ? ' cur' : '');
+      if (opts.memoId) mk.dataset.memo = opts.memoId(s.ref);
+      const tip = opts.title ? opts.title(s.ref) : '';
+      if (tip) mk.title = tip;
+      target.parentNode.insertBefore(mk, target);
+      mk.appendChild(target);
+      if (target === node) break;
+    }
+  });
+}
+function collectMatches(text, needle, sensitive){
+  if (!needle) return [];
+  const hay = sensitive ? text : text.toLocaleLowerCase();
+  const query = sensitive ? needle : needle.toLocaleLowerCase();
+  const out = [];
+  let pos = 0;
+  while ((pos = hay.indexOf(query, pos)) !== -1){
+    out.push({start:pos, end:pos+needle.length});
+    pos += Math.max(needle.length, 1);
+  }
+  return out;
+}
+/* 찾은 모든 일치항을 지속 표시하고, 현재 항목은 진한 색으로 구분 */
+function paintFindHighlights(){
+  unwrapMarks(hlCode, 'mark.ov-find');
+  unwrapMarks(preview, 'mark.ov-find');
+  if (!findOpen || !findInput.value) return;
+  const cur = findMatches[findIndex];
+  paintRanges(hlCode, findMatches, {cls:'ov-find', isCurrent:r=>r===cur});
+  paintRanges(preview, collectMatches(preview.textContent, findInput.value, findCase.checked), {cls:'ov-find'});
+}
+
+let findOpen = false, findMatches = [], findIndex = -1;
+function openFindPanel(){
+  closeTagPanel();
+  findOpen = true;
+  findPanel.hidden = false;
+  btnFind.setAttribute('aria-pressed','true');
+  const selected = editor.value.slice(editor.selectionStart,editor.selectionEnd);
+  if (selected && !selected.includes('\n') && selected.length<=120) findInput.value = selected;
+  refreshFind(false);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>findPanel.classList.add('open')));
+  findInput.focus();
+  findInput.select();
+}
+function closeFindPanel(restoreFocus=true){
+  if (!findOpen && findPanel.hidden) return;
+  findOpen = false;
+  findPanel.classList.remove('open');
+  btnFind.setAttribute('aria-pressed','false');
+  paintFindHighlights();
+  setTimeout(()=>{ if (!findOpen) findPanel.hidden = true; },180);
+  if (restoreFocus) editor.focus({preventScroll:true});
+}
+function collectFindMatches(){
+  return collectMatches(editor.value, findInput.value, findCase.checked);
+}
+function updateFindCount(){
+  findCount.textContent = findMatches.length ? (findIndex+1)+'/'+findMatches.length : '0/0';
+}
+function revealFind(index, focusEditor=false){
+  if (!findMatches.length){ findIndex=-1; updateFindCount(); return; }
+  findIndex = (index+findMatches.length)%findMatches.length;
+  const hit = findMatches[findIndex];
+  editor.setSelectionRange(hit.start,hit.end);
+  const top = measureLineTop(hit.start);
+  claimRecentOwner('editor',280);
+  editor.scrollTop = Math.max(0,top-editor.clientHeight/2);
+  mirrorScroll();
+  if (syncOn) applyScrollRatio(preview,editor);
+  flashLine(top);
+  updateCursor();
+  updateFindCount();
+  paintFindHighlights();
+  if (focusEditor) editor.focus({preventScroll:true});
+}
+function refreshFind(jump=true){
+  const anchor = editor.selectionStart;
+  findMatches = collectFindMatches();
+  if (!findMatches.length){ findIndex=-1; updateFindCount(); paintFindHighlights(); return; }
+  const next = findMatches.findIndex(m=>m.start>=anchor);
+  findIndex = next===-1 ? 0 : next;
+  updateFindCount();
+  if (jump) revealFind(findIndex,false); else paintFindHighlights();
+}
+function stepFind(delta){
+  if (!findMatches.length) refreshFind(false);
+  if (findMatches.length) revealFind((findIndex<0?0:findIndex)+delta,false);
+}
+function replaceCurrent(){
+  if (!findMatches.length) refreshFind(false);
+  if (!findMatches.length) return;
+  const hit = findMatches[Math.max(0,findIndex)];
+  editor.setRangeText(replaceInput.value,hit.start,hit.end,'end');
+  update();
+  refreshFind(false);
+  if (findMatches.length) revealFind(Math.min(findIndex,findMatches.length-1),false);
+  findInput.focus();
+}
+function replaceEveryMatch(){
+  const matches = collectFindMatches();
+  if (!matches.length) return;
+  let out='', cursor=0;
+  for (const hit of matches){
+    out += editor.value.slice(cursor,hit.start)+replaceInput.value;
+    cursor = hit.end;
+  }
+  out += editor.value.slice(cursor);
+  editor.value = out;
+  update();
+  refreshFind(false);
+  showToast(matches.length+'개 대치됨');
+  findInput.focus();
+}
+btnFind.addEventListener('click',()=>{ if (findOpen) closeFindPanel(); else openFindPanel(); });
+findClose.addEventListener('click',()=>closeFindPanel());
+findPrev.addEventListener('click',()=>stepFind(-1));
+findNext.addEventListener('click',()=>stepFind(1));
+replaceOne.addEventListener('click',replaceCurrent);
+replaceAll.addEventListener('click',replaceEveryMatch);
+findInput.addEventListener('input',()=>refreshFind(true));
+findCase.addEventListener('change',()=>refreshFind(true));
+findInput.addEventListener('keydown',(e)=>{
+  if (e.key==='Enter'){ e.preventDefault(); stepFind(e.shiftKey?-1:1); }
+});
+replaceInput.addEventListener('keydown',(e)=>{
+  if (e.key==='Enter'){ e.preventDefault(); replaceCurrent(); }
+});
+
+/* ── stable bidirectional scroll sync ───── */
+let pointerOwner = null, recentOwner = null, ownerTimer = null;
+function syncEditorGeometry(){
+  const scrollbarWidth=Math.max(0,editor.offsetWidth-editor.clientWidth);
+  hl.style.right=scrollbarWidth+'px';
+}
+function mirrorScroll(){
+  syncEditorGeometry();
+  hl.scrollTop = editor.scrollTop;
+  hl.scrollLeft = editor.scrollLeft;
+  gutterInner.style.transform = 'translateY('+(-editor.scrollTop)+'px)';
+}
+window.addEventListener('resize',syncEditorGeometry,{passive:true});
+function scrollMax(el){ return el.scrollHeight - el.clientHeight; }
+function applyScrollRatio(dst,src){
+  const smax=scrollMax(src), dmax=scrollMax(dst);
+  if (smax>0 && dmax>0) dst.scrollTop=(src.scrollTop/smax)*dmax;
+}
+function claimRecentOwner(source,ms=180){
+  recentOwner=source;
+  clearTimeout(ownerTimer);
+  ownerTimer=setTimeout(()=>{ if (recentOwner===source) recentOwner=null; },ms);
+}
+function canDriveSync(source){
+  const owner=pointerOwner||recentOwner;
+  return !owner||owner===source;
+}
+function beginPointerOwner(source){
+  pointerOwner=source;
+  claimRecentOwner(source,500);
+}
+editor.addEventListener('pointerdown',()=>beginPointerOwner('editor'),{passive:true});
+preview.addEventListener('pointerdown',()=>beginPointerOwner('preview'),{passive:true});
+window.addEventListener('pointerup',()=>{
+  if (!pointerOwner) return;
+  const source=pointerOwner;
+  pointerOwner=null;
+  claimRecentOwner(source,220);
+},{passive:true});
+window.addEventListener('pointercancel',()=>{ pointerOwner=null; },{passive:true});
+editor.addEventListener('wheel',()=>claimRecentOwner('editor',260),{passive:true});
+preview.addEventListener('wheel',()=>claimRecentOwner('preview',260),{passive:true});
+editor.addEventListener('touchstart',()=>claimRecentOwner('editor',500),{passive:true});
+preview.addEventListener('touchstart',()=>claimRecentOwner('preview',500),{passive:true});
+editor.addEventListener('scroll',()=>{
+  mirrorScroll();
+  if (!syncOn||!canDriveSync('editor')) return;
+  claimRecentOwner('editor');
+  applyScrollRatio(preview,editor);
+},{passive:true});
+preview.addEventListener('scroll',()=>{
+  if (!syncOn||!canDriveSync('preview')) return;
+  claimRecentOwner('preview');
+  applyScrollRatio(editor,preview);
+  mirrorScroll();
+},{passive:true});
+
+/* ── main update ───────────────────────── */
+function update(){
+  const src = editor.value;
+  hlCode.innerHTML = highlight(src)+'\n';
+  preview.innerHTML = renderMarkdown(src);
+  updateGutter(src);
+  updateStats(src);
+  updateTagStatus(src);
+  mirrorScroll();
+  renderMemoHighlights();
+  if (findOpen) refreshFind(false); else paintFindHighlights();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>store.set(LS.content, src), 300);
+}
+editor.addEventListener('input', update);
+document.addEventListener('selectionchange', ()=>{ if (document.activeElement===editor) updateCursor(); });
+
+/* ── editing helpers ───────────────────── */
+function insertText(s){
+  editor.setRangeText(s, editor.selectionStart, editor.selectionEnd, 'end');
+  update();
+}
+function wrapSel(marker){
+  const st = editor.selectionStart, en = editor.selectionEnd;
+  const sel = editor.value.slice(st,en);
+  editor.setRangeText(marker+sel+marker, st, en, sel?'end':'start');
+  if (!sel) editor.selectionStart = editor.selectionEnd = st+marker.length;
+  update();
+}
+editor.addEventListener('keydown', (e)=>{
+  const mod = e.ctrlKey||e.metaKey;
+  if (e.key==='Tab' && !e.isComposing){ e.preventDefault(); insertText('  '); }
+  else if (mod && e.key.toLowerCase()==='b'){ e.preventDefault(); wrapSel('**'); }
+  else if (mod && e.key.toLowerCase()==='i'){ e.preventDefault(); wrapSel('*'); }
+});
+document.addEventListener('keydown',(e)=>{
+  const mod=e.ctrlKey||e.metaKey;
+  if (mod&&(e.key.toLowerCase()==='f'||e.key.toLowerCase()==='h')){
+    e.preventDefault();
+    if (!findOpen) openFindPanel();
+    else { findInput.focus(); findInput.select(); }
+  } else if (e.key==='Escape'&&findOpen){
+    e.preventDefault();
+    closeFindPanel();
+  }
+});
+document.addEventListener('pointerdown',(e)=>{
+  if (findOpen&&!findPanel.contains(e.target)&&!btnFind.contains(e.target)) closeFindPanel(false);
+});
+
+/* ── actions ───────────────────────────── */
+function showToast(msg){
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toast.classList.remove('show'), 1600);
+}
+btnCopy.addEventListener('click', async ()=>{
+  try{ await navigator.clipboard.writeText(editor.value); }
+  catch(e){ editor.select(); document.execCommand('copy'); editor.selectionStart = editor.value.length; }
+  showToast('클립보드에 복사됨');
+});
+function renderSaveMenu(){
+  saveOptions.forEach(btn=>btn.setAttribute('aria-current',String(btn.dataset.ext===saveExt)));
+}
+function openSaveMenu(){
+  closeFindPanel(false);
+  closeTagPanel();
+  saveOpen=true;
+  renderSaveMenu();
+  saveMenu.hidden=false;
+  btnSave.setAttribute('aria-expanded','true');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>saveMenu.classList.add('open')));
+}
+function closeSaveMenu(){
+  if (!saveOpen&&saveMenu.hidden) return;
+  saveOpen=false;
+  saveMenu.classList.remove('open');
+  btnSave.setAttribute('aria-expanded','false');
+  setTimeout(()=>{ if (!saveOpen) saveMenu.hidden=true; },180);
+}
+function downloadDocument(ext=saveExt){
+  const allowed=new Set(['md','txt','markdown']);
+  if (!allowed.has(ext)) ext='md';
+  saveExt=ext;
+  store.set(LS.ext,ext);
+  const first=(editor.value.match(/^#\s+(.+)$/m)||[])[1];
+  const name=(first?first.replace(/<[^>]*>/g,'').trim().replace(/[\\/:*?"<>|]/g,'').slice(0,40):'')||'document';
+  const mime=ext==='txt'?'text/plain;charset=utf-8':'text/markdown;charset=utf-8';
+  const filename=name+'.'+ext;
+  const file=new File([editor.value],filename,{type:mime});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(file);
+  a.download=filename;
+  a.style.display='none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{
+    a.remove();
+    URL.revokeObjectURL(a.href);
+  },1000);
+  renderSaveMenu();
+  closeSaveMenu();
+  showToast(name+'.'+ext+' 저장됨');
+}
+btnSave.addEventListener('click',()=>{ if (saveOpen) closeSaveMenu(); else openSaveMenu(); });
+saveOptions.forEach(btn=>btn.addEventListener('click',()=>downloadDocument(btn.dataset.ext)));
+document.addEventListener('pointerdown',(e)=>{
+  if (saveOpen&&!saveMenu.contains(e.target)&&!btnSave.contains(e.target)) closeSaveMenu();
+});
+document.addEventListener('keydown',(e)=>{
+  const mod=e.ctrlKey||e.metaKey;
+  if (mod&&e.key.toLowerCase()==='s'){
+    e.preventDefault();
+    downloadDocument(saveExt);
+  } else if (e.key==='Escape'&&saveOpen){
+    e.preventDefault();
+    closeSaveMenu();
+  }
+});
+
+function applyToggles(){
+  preview.classList.toggle('hide-tags', !tagsOn);
+  btnTags.setAttribute('aria-pressed', String(tagsOn));
+  btnTags.title = tagsOn ? 'XML 태그 표시 중 — 클릭하면 숨김' : 'XML 태그 숨김 — 클릭하면 표시';
+  btnHtml.setAttribute('aria-pressed', String(htmlOn));
+  btnHtml.title = htmlOn ? '표준 HTML 렌더링 켜짐 — 클릭하면 끔' : '표준 HTML 렌더링 꺼짐 — 클릭하면 켬';
+  btnSync.setAttribute('aria-pressed', String(syncOn));
+  btnSync.title = syncOn ? '스크롤 동기화 켜짐 — 클릭하면 끔' : '스크롤 동기화 꺼짐 — 클릭하면 켬';
+}
+btnTags.addEventListener('click', ()=>{ tagsOn = !tagsOn; store.set(LS.tags, tagsOn?'on':'off'); applyToggles(); });
+btnHtml.addEventListener('click', ()=>{
+  htmlOn=!htmlOn;
+  store.set(LS.html,htmlOn?'on':'off');
+  applyToggles();
+  update();
+});
+btnSync.addEventListener('click', ()=>{ syncOn = !syncOn; store.set(LS.sync, syncOn?'on':'off'); applyToggles(); });
+
+function setTheme(t){
+  document.documentElement.dataset.theme = t;
+  store.set(LS.theme, t);
+  const nextLabel = (t==='dark' ? '라이트' : '다크')+' 모드로 전환';
+  btnTheme.setAttribute('aria-label', nextLabel);
+  btnTheme.title = nextLabel;
+}
+btnTheme.addEventListener('click', ()=>{
+  setTheme(document.documentElement.dataset.theme==='dark' ? 'light' : 'dark');
+});
+
+/* ── divider drag ──────────────────────── */
+let dragging = false;
+divider.addEventListener('pointerdown', (e)=>{
+  dragging = true;
+  divider.setPointerCapture(e.pointerId);
+  document.body.classList.add('dragging');
+});
+divider.addEventListener('pointermove', (e)=>{
+  if (!dragging) return;
+  const r = workspace.getBoundingClientRect();
+  let p = (e.clientX - r.left)/r.width;
+  p = Math.min(0.75, Math.max(0.25, p));
+  editorPane.style.flex = '0 0 '+(p*100)+'%';
+});
+const endDrag = ()=>{ dragging = false; document.body.classList.remove('dragging'); };
+divider.addEventListener('pointerup', endDrag);
+divider.addEventListener('pointercancel', endDrag);
+divider.addEventListener('dblclick', ()=>{ editorPane.style.flex = '0 0 50%'; });
+
+/* ── sample & init ─────────────────────── */
+const SAMPLE = `# RP 프롬프트: 달빛 도서관의 현자
+
+<character name="아리아" age="127" role="고대 도서관의 수호자">
+## 캐릭터 설정
+- **이름**: 아리아 벨라도나
+- **직업**: 고대 도서관 *루멘 아르카나*의 수호자
+- **성격**: 차분함, 논리적, 가끔 ~~독설에 가까운~~ 솔직한 조언
+  - 후손에게는 한없이 다정함
+  - 도서관 규칙에는 철저함
+
+### 말투 규칙
+1. 존댓말 사용, 문장 끝을 부드럽게
+2. 비유를 즐겨 사용
+- [x] 캐릭터 카드 작성
+- [ ] 금지 행동 목록 추가
+</character>
+
+<world>
+## 세계관
+> 마법과 과학이 공존하는 도시 **루멘**.
+> 밤이 되면 도서관의 책들이 속삭이기 시작한다.
+
+| 장소 | 분위기 | 위험도 |
+| --- | --- | --- |
+| 중앙 홀 | 고요 | 낮음 |
+| 지하 서고 | 음산 | 높음 |
+</world>
+
+<scenario>
+## 시나리오 훅
+사용자가 도서관에 숨어든 도둑을 쫓는 의뢰를 맡는다.
+\`난이도: 중급\` — 자세한 규칙은 아래 코드 블록 참고.
+
+\`\`\`text
+[규칙] 마법 사용 시 마나 10 소모
+[규칙] 자정 이후 외출 금지
+\`\`\`
+</scenario>
+
+---
+
+여기까지가 샘플입니다. 전체를 지우고 바로 작성을 시작하면 됩니다.
+**자동 저장**되며, 단축키: \`Ctrl+B\` 굵게 | \`Ctrl+I\` 기울임 | \`Ctrl+S\` 최근 선택 형식으로 저장`;
+
+const savedContent = store.get(LS.content);
+editor.value = savedContent!==null ? savedContent : SAMPLE;
+setTheme(store.get(LS.theme) || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+syncOn = store.get(LS.sync)!=='off';
+tagsOn = store.get(LS.tags)!=='off';
+htmlOn = store.get(LS.html)==='on';
+saveExt = ['md','txt','markdown'].includes(store.get(LS.ext)) ? store.get(LS.ext) : 'md';
+/* ── 메모: 미리보기 드래그 → 기록 ────── */
+let memos = [];
+let memoPanelOpen = false, memoCardOpen = false, activeMemoId = null, draftMemo = null, pendingSel = null;
+const MEMO_CTX = 28;
+
+function newMemoId(){ return 'm'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function previewText(){ return preview.textContent || ''; }
+function loadMemos(){
+  try { memos = JSON.parse(store.get(LS.memos) || '[]'); } catch(e){ memos = []; }
+  if (!Array.isArray(memos)) memos = [];
+  renderMemoHighlights();
+}
+function persistMemos(){ store.set(LS.memos, JSON.stringify(memos)); }
+
+/* 사용자 선택 영역을 미리보기 문자 오프셋으로 환산 */
+function selectionRangeInPreview(){
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed || !sel.rangeCount) return null;
+  const range = sel.getRangeAt(0);
+  if (!preview.contains(range.commonAncestorContainer)) return null;
+  const text = range.toString();
+  if (!text.trim()) return null;
+  const pre = document.createRange();
+  pre.selectNodeContents(preview);
+  pre.setEnd(range.startContainer, range.startOffset);
+  const start = pre.toString().length;
+  return { start, end:start+text.length, text, rect:range.getBoundingClientRect() };
+}
+
+/* 본문이 수정되어도 인용문·전후 문맥으로 위치를 다시 잡는다 */
+function anchorMemo(memo, text){
+  const hits = [];
+  let pos = 0;
+  while ((pos = text.indexOf(memo.quote, pos)) !== -1){ hits.push(pos); pos += Math.max(memo.quote.length, 1); }
+  if (!hits.length){ memo.orphan = true; return null; }
+  memo.orphan = false;
+  let best = hits[0], bestScore = -1;
+  for (const h of hits){
+    let score = 0;
+    if (memo.before){
+      const b = text.slice(Math.max(0, h-memo.before.length), h);
+      score += (b === memo.before) ? 2 : (b.endsWith(memo.before.slice(-6)) ? 1 : 0);
+    }
+    if (memo.after){
+      const a = text.slice(h+memo.quote.length, h+memo.quote.length+memo.after.length);
+      score += (a === memo.after) ? 2 : (a.startsWith(memo.after.slice(0,6)) ? 1 : 0);
+    }
+    if (Math.abs(h - (memo.start||0)) < 40) score += 1;
+    if (score > bestScore){ bestScore = score; best = h; }
+  }
+  memo.start = best;
+  return { start:best, end:best+memo.quote.length, memo };
+}
+
+function renderMemoCountUi(){
+  const n = memos.length;
+  memoCount.textContent = String(n);
+  memoCount.hidden = n === 0;
+  memoPanelCount.textContent = String(n);
+  btnMemo.setAttribute('aria-pressed', String(n > 0));
+}
+
+function renderMemoHighlights(){
+  if (!preview) return;
+  unwrapMarks(preview, 'mark.ov-memo');
+  const text = previewText();
+  const ranges = [];
+  for (const m of memos){
+    const r = anchorMemo(m, text);
+    if (r) ranges.push(r);
+  }
+  ranges.sort((a,b)=> a.start - b.start || b.end - a.end);
+  const clean = [];
+  let lastEnd = -1;
+  for (const r of ranges){ if (r.start >= lastEnd){ clean.push(r); lastEnd = r.end; } }
+  paintRanges(preview, clean, {
+    cls:'ov-memo',
+    isCurrent:r=>r.memo.id === activeMemoId,
+    memoId:r=>r.memo.id,
+    title:r=>r.memo.note
+  });
+  renderMemoCountUi();
+  if (memoPanelOpen) renderMemoList();
+}
+
+function clampToViewport(el, cx, y){
+  const r = el.getBoundingClientRect();
+  const pad = 8;
+  let left = cx - r.width/2;
+  left = Math.min(Math.max(pad, left), Math.max(pad, innerWidth - r.width - pad));
+  let top = y;
+  if (top + r.height + pad > innerHeight) top = Math.max(pad, y - r.height - 30);
+  el.style.left = Math.round(left)+'px';
+  el.style.top = Math.round(top)+'px';
+}
+
+function showMemoBubble(sel){
+  pendingSel = sel;
+  memoBubble.hidden = false;
+  requestAnimationFrame(()=>{
+    clampToViewport(memoBubble, sel.rect.left + sel.rect.width/2, sel.rect.bottom + 8);
+    memoBubble.classList.add('open');
+  });
+}
+function hideMemoBubble(){
+  pendingSel = null;
+  if (memoBubble.hidden) return;
+  memoBubble.classList.remove('open');
+  setTimeout(()=>{ if (!memoBubble.classList.contains('open')) memoBubble.hidden = true; }, 160);
+}
+
+function openMemoCard(opts){
+  const sel = pendingSel;
+  hideMemoBubble();
+  closeSaveMenu();
+  closeTagPanel();
+  memoCardOpen = true;
+  draftMemo = opts.draft || null;
+  activeMemoId = opts.memo ? opts.memo.id : null;
+  const quote = opts.memo ? opts.memo.quote : (draftMemo ? draftMemo.quote : '');
+  memoCardQuote.textContent = quote.length > 140 ? quote.slice(0,140)+'…' : quote;
+  memoCardInput.value = opts.memo ? (opts.memo.note || '') : '';
+  memoDelete.hidden = !opts.memo;
+  memoCard.hidden = false;
+  const rect = opts.rect || (sel && sel.rect) || preview.getBoundingClientRect();
+  requestAnimationFrame(()=>{
+    clampToViewport(memoCard, rect.left + rect.width/2, rect.bottom + 10);
+    memoCard.classList.add('open');
+    memoCardInput.focus();
+  });
+  renderMemoHighlights();
+}
+function closeMemoCard(){
+  if (!memoCardOpen) return;
+  memoCardOpen = false;
+  draftMemo = null;
+  activeMemoId = null;
+  memoCard.classList.remove('open');
+  setTimeout(()=>{ if (!memoCardOpen) memoCard.hidden = true; }, 180);
+  renderMemoHighlights();
+}
+
+memoAdd.addEventListener('click', ()=>{
+  if (!pendingSel) return;
+  const sel = pendingSel;
+  const text = previewText();
+  const draft = {
+    id: newMemoId(),
+    quote: sel.text,
+    before: text.slice(Math.max(0, sel.start-MEMO_CTX), sel.start),
+    after: text.slice(sel.end, sel.end+MEMO_CTX),
+    start: sel.start,
+    note: '',
+    created: Date.now()
+  };
+  openMemoCard({ draft, rect: sel.rect });
+});
+
+memoSave.addEventListener('click', ()=>{
+  const note = memoCardInput.value.trim();
+  if (draftMemo){
+    if (!note){ showToast('메모 내용을 입력해 주세요'); memoCardInput.focus(); return; }
+    draftMemo.note = note;
+    memos.push(draftMemo);
+    persistMemos();
+    showToast('메모를 추가했습니다');
+  } else if (activeMemoId){
+    const m = memos.find(x=>x.id === activeMemoId);
+    if (m){
+      if (!note){ memos = memos.filter(x=>x.id !== activeMemoId); showToast('메모를 삭제했습니다'); }
+      else { m.note = note; showToast('메모를 수정했습니다'); }
+      persistMemos();
+    }
+  }
+  const s = window.getSelection(); if (s) s.removeAllRanges();
+  closeMemoCard();
+});
+memoDelete.addEventListener('click', ()=>{
+  if (activeMemoId){
+    memos = memos.filter(x=>x.id !== activeMemoId);
+    persistMemos();
+    showToast('메모를 삭제했습니다');
+  }
+  closeMemoCard();
+});
+memoCancel.addEventListener('click', ()=>closeMemoCard());
+memoCardInput.addEventListener('keydown', e=>{
+  if (e.key === 'Escape'){ e.preventDefault(); closeMemoCard(); }
+  else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ e.preventDefault(); memoSave.click(); }
+});
+
+function handlePreviewSelection(){
+  if (memoCardOpen) return;
+  const sel = selectionRangeInPreview();
+  if (!sel){ hideMemoBubble(); return; }
+  showMemoBubble(sel);
+}
+preview.addEventListener('mouseup', ()=>setTimeout(handlePreviewSelection, 0));
+preview.addEventListener('touchend', ()=>setTimeout(handlePreviewSelection, 0));
+preview.addEventListener('click', e=>{
+  if (e.target.closest('a')) return;
+  const mk = e.target.closest('mark.ov-memo');
+  if (!mk) return;
+  const m = memos.find(x=>x.id === mk.dataset.memo);
+  if (!m) return;
+  e.preventDefault();
+  openMemoCard({ memo:m, rect: mk.getBoundingClientRect() });
+});
+
+function renderMemoList(){
+  if (!memos.length){
+    memoList.innerHTML = '<div class="memo-empty">아직 메모가 없습니다.<br>미리보기에서 텍스트를 드래그해 보세요.</div>';
+    return;
+  }
+  memoList.innerHTML = '';
+  [...memos].reverse().forEach(m=>{
+    const row = document.createElement('div');
+    row.className = 'memo-row';
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'memo-item' + (m.orphan ? ' memo-orphan' : '');
+    item.title = m.orphan ? '원문에서 이 인용을 찾지 못했습니다' : '클릭하면 해당 위치로 이동';
+    const q = document.createElement('div');
+    q.className = 'memo-item-q';
+    q.innerHTML = ICON.memo + '<span class="t"></span>';
+    q.querySelector('.t').textContent = m.quote;
+    const n = document.createElement('div');
+    n.className = 'memo-item-n';
+    n.textContent = m.note;
+    item.append(q, n);
+    item.addEventListener('click', ()=>jumpToMemo(m));
+    const x = document.createElement('button');
+    x.type = 'button';
+    x.className = 'memo-item-x';
+    x.innerHTML = ICON.trash;
+    x.title = '메모 삭제';
+    x.setAttribute('aria-label', '메모 삭제');
+    x.addEventListener('click', ev=>{
+      ev.stopPropagation();
+      memos = memos.filter(v=>v.id !== m.id);
+      persistMemos();
+      renderMemoHighlights();
+      showToast('메모를 삭제했습니다');
+    });
+    row.append(item, x);
+    memoList.appendChild(row);
+  });
+}
+function jumpToMemo(m){
+  activeMemoId = m.id;
+  renderMemoHighlights();
+  const mk = preview.querySelector('mark.ov-memo[data-memo="'+m.id+'"]');
+  if (!mk){ showToast('원문에서 해당 부분을 찾을 수 없습니다'); return; }
+  claimRecentOwner('preview', 400);
+  mk.scrollIntoView({ block:'center', behavior:'smooth' });
+}
+
+function openMemoPanel(){
+  closeFindPanel(false);
+  closeSaveMenu();
+  closeTagPanel();
+  memoPanelOpen = true;
+  memoPanel.hidden = false;
+  btnMemo.setAttribute('aria-expanded','true');
+  renderMemoList();
+  requestAnimationFrame(()=>requestAnimationFrame(()=>memoPanel.classList.add('open')));
+}
+function closeMemoPanel(){
+  if (!memoPanelOpen && memoPanel.hidden) return;
+  memoPanelOpen = false;
+  memoPanel.classList.remove('open');
+  btnMemo.setAttribute('aria-expanded','false');
+  setTimeout(()=>{ if (!memoPanelOpen) memoPanel.hidden = true; }, 180);
+}
+btnMemo.addEventListener('click', ()=>{ memoPanelOpen ? closeMemoPanel() : openMemoPanel(); });
+memoPanelClose.addEventListener('click', ()=>closeMemoPanel());
+
+document.addEventListener('pointerdown', e=>{
+  if (memoPanelOpen && !memoPanel.contains(e.target) && !btnMemo.contains(e.target)) closeMemoPanel();
+  if (memoCardOpen && !memoCard.contains(e.target) && !e.target.closest('mark.ov-memo')) closeMemoCard();
+  if (!memoBubble.hidden && !memoBubble.contains(e.target)) hideMemoBubble();
+}, true);
+document.addEventListener('keydown', e=>{
+  if (e.key !== 'Escape') return;
+  if (memoCardOpen) closeMemoCard();
+  else if (memoPanelOpen) closeMemoPanel();
+  else if (!memoBubble.hidden) hideMemoBubble();
+});
+addEventListener('resize', hideMemoBubble);
+preview.addEventListener('scroll', hideMemoBubble);
+
+loadMemos();
+applyToggles();
+renderSaveMenu();
+update();
+updateCursor();
+</script>
+</body>
+</html>

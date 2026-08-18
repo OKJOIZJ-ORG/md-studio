@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- MD Studio v1.5.0 · 2026-08-18 -->
+<!-- MD Studio v1.6.0 · 2026-08-18 -->
 <html lang="ko" data-theme="light">
 <head>
 <meta charset="UTF-8">
@@ -643,6 +643,157 @@ mark.ov{padding:0;color:inherit;border-radius:2px;}
   border-radius: 2px;
 }
 
+
+/* ── TOC Minimap & Floating Outline (Emil / Notion Style) ── */
+.preview-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+.preview-wrap .preview {
+  padding-right: 48px; /* Room for TOC minimap bar */
+}
+.toc-minimap {
+  position: absolute;
+  right: 12px;
+  top: 24px;
+  bottom: 24px;
+  width: 16px;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 6px;
+  cursor: pointer;
+  padding: 6px 0;
+  user-select: none;
+}
+.toc-dash {
+  height: 2px;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--text-sec) 40%, transparent);
+  transition: transform 140ms var(--ease-out), background-color 120ms ease, width 140ms var(--ease-out);
+  transform-origin: right center;
+}
+.toc-dash.h1 { width: 14px; height: 2.5px; }
+.toc-dash.h2 { width: 11px; height: 2px; }
+.toc-dash.h3 { width: 8px; height: 1.5px; }
+.toc-dash.h4, .toc-dash.h5, .toc-dash.h6 { width: 6px; height: 1.5px; }
+.toc-dash.active {
+  background: var(--accent) !important;
+  width: 16px !important;
+  height: 3px !important;
+  border-radius: 2px;
+  box-shadow: 0 0 8px var(--accent-soft);
+}
+@media (hover: hover) {
+  .toc-minimap:hover .toc-dash {
+    background: color-mix(in srgb, var(--text-sec) 75%, transparent);
+  }
+  .toc-dash:hover {
+    background: var(--accent) !important;
+    transform: scaleX(1.3);
+  }
+}
+.toc-popover {
+  position: absolute;
+  right: 32px;
+  top: 18px;
+  width: 270px;
+  max-height: min(480px, calc(100% - 36px));
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.90);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.14), 0 1px 4px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  z-index: 25;
+  transform-origin: top right;
+  opacity: 0;
+  transform: scale(0.96) translateX(8px);
+  pointer-events: none;
+  transition: opacity 160ms var(--ease-out), transform 160ms var(--ease-out);
+}
+[data-theme="dark"] .toc-popover {
+  background: rgba(26, 26, 30, 0.92);
+  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+.toc-popover.open {
+  opacity: 1;
+  transform: scale(1) translateX(0);
+  pointer-events: auto;
+}
+.toc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.toc-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-sec);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.toc-count {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-sec);
+  font-variant-numeric: tabular-nums;
+}
+.toc-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.toc-item {
+  display: block;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--text-sec);
+  font-family: var(--sans);
+  font-size: 12.5px;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background-color 120ms ease, color 120ms ease, transform 140ms var(--ease-out);
+}
+.toc-item.depth-1 { font-weight: 600; color: var(--text); padding-left: 8px; }
+.toc-item.depth-2 { font-weight: 500; padding-left: 18px; }
+.toc-item.depth-3 { padding-left: 28px; font-size: 12px; opacity: 0.9; }
+.toc-item.depth-4, .toc-item.depth-5, .toc-item.depth-6 { padding-left: 36px; font-size: 11.5px; opacity: 0.8; }
+@media (hover: hover) {
+  .toc-item:hover {
+    background: var(--surface);
+    color: var(--text);
+  }
+}
+.toc-item.active {
+  color: var(--accent) !important;
+  font-weight: 600 !important;
+  background: var(--accent-soft) !important;
+}
+.toc-item:active {
+  transform: scale(0.98);
+}
+
 </style>
 </head>
 <body>
@@ -729,9 +880,19 @@ mark.ov{padding:0;color:inherit;border-radius:2px;}
     </div>
   </section>
   <div class="divider" id="divider" data-tooltip="드래그: 분할 비율 조절 · 더블클릭: 50:50"></div>
-  <section class="pane preview-pane">
+  <section class="pane preview-pane" id="previewPane">
     <div class="pane-header"><span>미리보기</span></div>
-    <div class="preview" id="preview"></div>
+    <div class="preview-wrap" id="previewWrap">
+      <div class="preview" id="preview"></div>
+      <div class="toc-minimap" id="tocMinimap" aria-label="문서 목차 미니맵" hidden></div>
+      <div class="toc-popover" id="tocPopover" role="dialog" aria-label="문서 목차" hidden>
+        <div class="toc-header">
+          <span class="toc-title">목차</span>
+          <span class="toc-count" id="tocCount">0개</span>
+        </div>
+        <nav class="toc-list" id="tocList"></nav>
+      </div>
+    </div>
   </section>
 </main>
 
@@ -866,6 +1027,126 @@ function syncEditorMetrics() {
 new ResizeObserver(syncEditorMetrics).observe(editor);
 window.addEventListener('resize', syncEditorMetrics);
 
+
+/* ── Table of Contents (TOC) & Scrollspy Engine ── */
+const tocMinimap = document.getElementById('tocMinimap');
+const tocPopover = document.getElementById('tocPopover');
+const tocList = document.getElementById('tocList');
+const tocCount = document.getElementById('tocCount');
+let tocItems = [];
+let tocHideTimer = null;
+
+function openTocPopover() {
+  if (tocHideTimer) clearTimeout(tocHideTimer);
+  tocPopover.hidden = false;
+  requestAnimationFrame(() => tocPopover.classList.add('open'));
+}
+
+function closeTocPopover(delay = 200) {
+  if (tocHideTimer) clearTimeout(tocHideTimer);
+  tocHideTimer = setTimeout(() => {
+    tocPopover.classList.remove('open');
+    setTimeout(() => {
+      if (!tocPopover.classList.contains('open')) tocPopover.hidden = true;
+    }, 160);
+  }, delay);
+}
+
+tocMinimap.addEventListener('mouseenter', openTocPopover);
+tocMinimap.addEventListener('mouseleave', () => closeTocPopover(260));
+tocPopover.addEventListener('mouseenter', () => {
+  if (tocHideTimer) clearTimeout(tocHideTimer);
+});
+tocPopover.addEventListener('mouseleave', () => closeTocPopover(200));
+
+function updateTableOfContents() {
+  const headings = preview.querySelectorAll('h1, h2, h3, h4, h5, h6');
+  if (!headings.length) {
+    tocMinimap.hidden = true;
+    tocPopover.hidden = true;
+    tocItems = [];
+    return;
+  }
+
+  tocMinimap.hidden = false;
+  tocCount.textContent = headings.length + '개';
+
+  let minimapHtml = '';
+  let listHtml = '';
+  tocItems = [];
+
+  headings.forEach((h, idx) => {
+    const id = 'heading-' + idx;
+    h.id = id;
+    const level = parseInt(h.tagName.substring(1), 10);
+    const text = h.textContent.trim();
+
+    tocItems.push({ id, level, el: h, text });
+
+    minimapHtml += `<div class="toc-dash h${level}" data-idx="${idx}" data-tooltip="${escapeHtml(text)}"></div>`;
+    listHtml += `<button type="button" class="toc-item depth-${level}" data-idx="${idx}">${escapeHtml(text)}</button>`;
+  });
+
+  tocMinimap.innerHTML = minimapHtml;
+  tocList.innerHTML = listHtml;
+
+  // Bind clicks
+  tocMinimap.querySelectorAll('.toc-dash').forEach(dash => {
+    dash.addEventListener('click', (e) => {
+      const idx = parseInt(dash.getAttribute('data-idx'), 10);
+      scrollToHeading(idx);
+    });
+  });
+
+  tocList.querySelectorAll('.toc-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      const idx = parseInt(item.getAttribute('data-idx'), 10);
+      scrollToHeading(idx);
+      closeTocPopover(80);
+    });
+  });
+
+  syncTocActiveState();
+}
+
+function scrollToHeading(idx) {
+  const target = tocItems[idx];
+  if (!target || !target.el) return;
+  const targetTop = target.el.offsetTop - 16;
+  preview.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
+}
+
+function syncTocActiveState() {
+  if (!tocItems.length) return;
+  const scrollTop = preview.scrollTop;
+  const threshold = scrollTop + 80;
+
+  let activeIdx = 0;
+  for (let i = 0; i < tocItems.length; i++) {
+    if (tocItems[i].el.offsetTop <= threshold) {
+      activeIdx = i;
+    } else {
+      break;
+    }
+  }
+
+  const dashes = tocMinimap.querySelectorAll('.toc-dash');
+  const items = tocList.querySelectorAll('.toc-item');
+
+  dashes.forEach((d, i) => d.classList.toggle('active', i === activeIdx));
+  items.forEach((it, i) => {
+    const isActive = i === activeIdx;
+    it.classList.toggle('active', isActive);
+    if (isActive && tocPopover.classList.contains('open')) {
+      it.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  });
+}
+
+preview.addEventListener('scroll', () => {
+  requestAnimationFrame(syncTocActiveState);
+}, { passive: true });
+
 })();let c=p.apply(r,u);return c===!1&&(c=a.apply(r,u)),c}}s.hooks=r}if(n.walkTokens){let r=this.defaults.walkTokens,i=n.walkTokens;s.walkTokens=function(o){let p=[];return p.push(i.call(this,o)),r&&(p=p.concat(r.call(this,o))),p}}this.defaults={...this.defaults,...s}}),this}setOptions(e){return this.defaults={...this.defaults,...e},this}lexer(e,t){return x.lex(e,t??this.defaults)}parser(e,t){return b.parse(e,t??this.defaults)}parseMarkdown(e){return(n,s)=>{let r={...s},i={...this.defaults,...r},o=this.onError(!!i.silent,!!i.async);if(this.defaults.async===!0&&r.async===!1)return o(new Error("marked(): The async option was set to true by an extension. Remove async: false from the parse options object to return a Promise."));if(typeof n>"u"||n===null)return o(new Error("marked(): input parameter is undefined or null"));if(typeof n!="string")return o(new Error("marked(): input parameter is of type "+Object.prototype.toString.call(n)+", string expected"));if(i.hooks&&(i.hooks.options=i,i.hooks.block=e),i.async)return(async()=>{let p=i.hooks?await i.hooks.preprocess(n):n,u=await(i.hooks?await i.hooks.provideLexer(e):e?x.lex:x.lexInline)(p,i),c=i.hooks?await i.hooks.processAllTokens(u):u;i.walkTokens&&await Promise.all(this.walkTokens(c,i.walkTokens));let k=await(i.hooks?await i.hooks.provideParser(e):e?b.parse:b.parseInline)(c,i);return i.hooks?await i.hooks.postprocess(k):k})().catch(o);try{i.hooks&&(n=i.hooks.preprocess(n));let a=(i.hooks?i.hooks.provideLexer(e):e?x.lex:x.lexInline)(n,i);i.hooks&&(a=i.hooks.processAllTokens(a)),i.walkTokens&&this.walkTokens(a,i.walkTokens);let c=(i.hooks?i.hooks.provideParser(e):e?b.parse:b.parseInline)(a,i);return i.hooks&&(c=i.hooks.postprocess(c)),c}catch(p){return o(p)}}}onError(e,t){return n=>{if(n.message+=`
 Please report this to https://github.com/markedjs/marked.`,e){let s="<p>An error occurred:</p><pre>"+O(n.message+"",!0)+"</pre>";return t?Promise.resolve(s):s}if(t)return Promise.reject(n);throw n}}};var C=new D;function g(l,e){return C.parse(l,e)}g.options=g.setOptions=function(l){return C.setOptions(l),g.defaults=C.defaults,F(g.defaults),g};g.getDefaults=z;g.defaults=R;function Re(...l){return C.use(...l),g.defaults=C.defaults,F(g.defaults),g}g.use=Re;g.walkTokens=function(l,e){return C.walkTokens(l,e)};g.parseInline=C.parseInline;g.Parser=b;g.parser=b.parse;g.Renderer=y;g.TextRenderer=_;g.Lexer=x;g.lexer=x.lex;g.Tokenizer=w;g.Hooks=P;g.parse=g;var Ot=g.options,wt=g.setOptions,yt=g.walkTokens,Pt=g.parseInline,St=g,_t=b.parse,$t=x.lex;
 
@@ -919,10 +1200,7 @@ const store = {
 let syncOn = true, tagsOn = true, htmlOn = false, saveOpen = false, saveExt = 'md';
 let lineCount = 1, saveTimer = null, toastTimer = null;
 
-/* ── utils & Core Parser (Marked + DOMPurify Engine) ── */
-const HTML_STANDARD_TAGS = new Set(('html head body title base link meta style address article aside footer header h1 h2 h3 h4 h5 h6 main nav section blockquote div dd dl dt figcaption figure hr li menu ol p pre ul a abbr b bdi bdo br cite code data dfn em i kbd mark q rp rt ruby s samp small span strong sub sup time u var wbr area audio img map track video embed object picture source canvas caption col colgroup table tbody td tfoot th thead tr button datalist fieldset form input label legend meter optgroup option output progress select textarea details dialog summary slot template iframe noscript script param svg path circle rect line polygon polyline g text b i style').split(' '));
-const HTML_VOID_TAGS = new Set(('area base br col embed hr img input link meta param source track wbr').split(' '));
-
+/* ── utils & Core Parser (Marked GFM + Pure HTML Passing) ── */
 function escapeHtml(s){
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -935,6 +1213,9 @@ function tagChipHtml(slash,name,attrs){
   return '<span class="xml-chip c'+tagIndex(name.toLowerCase())+'">&lt;'+slash+name+attrs+'&gt;</span>';
 }
 
+const HTML_STANDARD_TAGS = new Set(('html head body title base link meta style address article aside footer header h1 h2 h3 h4 h5 h6 main nav section blockquote div dd dl dt figcaption figure hr li menu ol p pre ul a abbr b bdi bdo br cite code data dfn em i kbd mark q rp rt ruby s samp small span strong sub sup time u var wbr area audio img map track video embed object picture source canvas caption col colgroup table tbody td tfoot th thead tr button datalist fieldset form input label legend meter optgroup option output progress select textarea details dialog summary slot template iframe noscript script param svg path circle rect line polygon polyline g text b i style defs linearGradient radialGradient stop use symbol clipPath').split(' '));
+const HTML_VOID_TAGS = new Set(('area base br col embed hr img input link meta param source track wbr').split(' '));
+
 // Configure marked with GitHub Flavored Markdown (GFM)
 if (typeof marked !== 'undefined' && marked.marked) {
   marked.marked.setOptions({
@@ -946,61 +1227,43 @@ if (typeof marked !== 'undefined' && marked.marked) {
 
 function renderMarkdown(src){
   if (!src) return '';
-  
-  // 1. Template variable normalization (\{\{ -> {{)
+
+  // 1. Template variable normalization (\\{\\{ -> {{)
   let normalized = src.replace(/\\{([^{}\n]+)\\}/g, '{$1}').replace(/\\/g, '');
-  
+
   // 2. Custom XML RP tags tokenization if htmlOn is OFF or for non-standard tags
   const xmlTokens = [];
-  if (!htmlOn || tagsOn) {
-    normalized = normalized.replace(/<(\/?)([a-zA-Z][\w:.-]*)((?:\s+[^>]*?)?)>/g, (m, sl, name, attrs) => {
-      const tagLower = name.toLowerCase();
-      const isStandard = /^(a|abbr|address|article|aside|audio|b|bdi|bdo|blockquote|br|button|canvas|caption|cite|code|col|colgroup|data|datalist|dd|del|details|dfn|dialog|div|dl|dt|em|fieldset|figcaption|figure|footer|form|h1|h2|h3|h4|h5|h6|header|hr|i|iframe|img|input|ins|kbd|label|legend|li|main|map|mark|menu|meter|nav|ol|optgroup|option|output|p|picture|pre|progress|q|rp|rt|ruby|s|samp|section|select|small|source|span|strong|sub|summary|sup|svg|path|circle|rect|line|polygon|polyline|g|text|table|tbody|td|textarea|tfoot|th|thead|time|tr|track|u|ul|var|video|wbr|style)$/i.test(tagLower);
-      
-      if (!htmlOn) {
-        // All tags rendered as chips
-        xmlTokens.push(tagChipHtml(sl, name, attrs));
-        return '%%XML_TOKEN_' + (xmlTokens.length - 1) + '%%';
-      } else if (!isStandard && tagsOn) {
-        // Non-standard RP tags rendered as chips
-        xmlTokens.push(tagChipHtml(sl, name, attrs));
-        return '%%XML_TOKEN_' + (xmlTokens.length - 1) + '%%';
-      }
-      return m;
-    });
-  }
+  normalized = normalized.replace(/<(\/?)([a-zA-Z][\w:.-]*)((?:\s+[^>]*?)?)>/g, (m, sl, name, attrs) => {
+    const tagLower = name.toLowerCase();
+    const isStandard = HTML_STANDARD_TAGS.has(tagLower);
 
-  // 3. Parse via industry-standard Marked engine
-  let rawHtml = '';
+    if (!htmlOn) {
+      // When HTML mode is OFF: render all HTML/XML tags as color-coded chips
+      xmlTokens.push(tagChipHtml(sl, name, attrs));
+      return '%%XML_TOKEN_' + (xmlTokens.length - 1) + '%%';
+    } else if (!isStandard && tagsOn) {
+      // When HTML mode is ON: render only non-standard RP tags as chips, leave standard HTML intact
+      xmlTokens.push(tagChipHtml(sl, name, attrs));
+      return '%%XML_TOKEN_' + (xmlTokens.length - 1) + '%%';
+    }
+    return m;
+  });
+
+  // 3. Parse via industry-standard Marked GFM engine
+  let renderedHtml = '';
   try {
-    rawHtml = marked.marked.parse(normalized);
+    renderedHtml = marked.marked.parse(normalized);
   } catch(e) {
     console.error('Marked parse error:', e);
-    rawHtml = escapeHtml(normalized);
+    renderedHtml = escapeHtml(normalized);
   }
 
-  // 4. Sanitize via DOMPurify with full HTML5/CSS/SVG attribute permissions
-  let cleanHtml = rawHtml;
-  if (htmlOn && typeof DOMPurify !== 'undefined') {
-    cleanHtml = DOMPurify.sanitize(rawHtml, {
-      ADD_TAGS: ['details', 'summary', 'iframe', 'style', 'video', 'audio', 'source', 'track', 'picture', 'svg', 'path', 'circle', 'rect', 'line', 'polygon', 'polyline', 'g', 'text', 'defs', 'linearGradient', 'radialGradient', 'stop', 'use', 'symbol', 'clipPath'],
-      ADD_ATTR: ['target', 'open', 'controls', 'autoplay', 'loop', 'muted', 'playsinline', 'style', 'class', 'id', 'data-*', 'aria-*', 'clip-path', 'transform', 'viewBox', 'd', 'fill', 'stroke', 'stroke-width', 'r', 'cx', 'cy', 'x', 'y', 'x1', 'y1', 'x2', 'y2', 'points', 'offset', 'stop-color', 'stop-opacity', 'width', 'height', 'align', 'valign', 'colspan', 'rowspan'],
-      FORBID_TAGS: ['script'],
-      FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur', 'onchange', 'onsubmit', 'onkeydown', 'onkeypress', 'onkeyup']
-    });
-  } else if (!htmlOn) {
-    cleanHtml = DOMPurify.sanitize(rawHtml, {
-      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'del', 'code', 'pre', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'a', 'img', 'span'],
-      ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target', 'rel']
-    });
-  }
-
-  // 5. Restore XML Chips
-  cleanHtml = cleanHtml.replace(/%%XML_TOKEN_(\d+)%%/g, (m, idx) => {
+  // 4. Restore XML Chips
+  renderedHtml = renderedHtml.replace(/%%XML_TOKEN_(\d+)%%/g, (m, idx) => {
     return xmlTokens[+idx] || '';
   });
 
-  return cleanHtml;
+  return renderedHtml;
 }
 
 /* ── editor highlight (must preserve every visible char) ── */
@@ -1422,11 +1685,136 @@ preview.addEventListener('scroll',()=>{
   mirrorScroll();
 },{passive:true});
 
+
+/* ── Table of Contents (TOC) & Scrollspy Engine ── */
+const tocMinimap = document.getElementById('tocMinimap');
+const tocPopover = document.getElementById('tocPopover');
+const tocList = document.getElementById('tocList');
+const tocCount = document.getElementById('tocCount');
+let tocItems = [];
+let tocHideTimer = null;
+
+function openTocPopover() {
+  if (tocHideTimer) clearTimeout(tocHideTimer);
+  tocPopover.hidden = false;
+  requestAnimationFrame(() => tocPopover.classList.add('open'));
+}
+
+function closeTocPopover(delay = 200) {
+  if (tocHideTimer) clearTimeout(tocHideTimer);
+  tocHideTimer = setTimeout(() => {
+    tocPopover.classList.remove('open');
+    setTimeout(() => {
+      if (!tocPopover.classList.contains('open')) tocPopover.hidden = true;
+    }, 160);
+  }, delay);
+}
+
+if (tocMinimap) {
+  tocMinimap.addEventListener('mouseenter', openTocPopover);
+  tocMinimap.addEventListener('mouseleave', () => closeTocPopover(260));
+}
+if (tocPopover) {
+  tocPopover.addEventListener('mouseenter', () => {
+    if (tocHideTimer) clearTimeout(tocHideTimer);
+  });
+  tocPopover.addEventListener('mouseleave', () => closeTocPopover(200));
+}
+
+function updateTableOfContents() {
+  if (!tocMinimap || !tocPopover || !tocList) return;
+  const headings = preview.querySelectorAll('h1, h2, h3, h4, h5, h6');
+  if (!headings.length) {
+    tocMinimap.hidden = true;
+    tocPopover.hidden = true;
+    tocItems = [];
+    return;
+  }
+
+  tocMinimap.hidden = false;
+  tocCount.textContent = headings.length + '개';
+
+  let minimapHtml = '';
+  let listHtml = '';
+  tocItems = [];
+
+  headings.forEach((h, idx) => {
+    const id = 'heading-' + idx;
+    h.id = id;
+    const level = parseInt(h.tagName.substring(1), 10);
+    const text = h.textContent.trim();
+
+    tocItems.push({ id, level, el: h, text });
+
+    minimapHtml += `<div class="toc-dash h${level}" data-idx="${idx}" data-tooltip="${escapeHtml(text)}"></div>`;
+    listHtml += `<button type="button" class="toc-item depth-${level}" data-idx="${idx}">${escapeHtml(text)}</button>`;
+  });
+
+  tocMinimap.innerHTML = minimapHtml;
+  tocList.innerHTML = listHtml;
+
+  tocMinimap.querySelectorAll('.toc-dash').forEach(dash => {
+    dash.addEventListener('click', () => {
+      const idx = parseInt(dash.getAttribute('data-idx'), 10);
+      scrollToHeading(idx);
+    });
+  });
+
+  tocList.querySelectorAll('.toc-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const idx = parseInt(item.getAttribute('data-idx'), 10);
+      scrollToHeading(idx);
+      closeTocPopover(80);
+    });
+  });
+
+  syncTocActiveState();
+}
+
+function scrollToHeading(idx) {
+  const target = tocItems[idx];
+  if (!target || !target.el) return;
+  const targetTop = target.el.offsetTop - 16;
+  preview.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
+}
+
+function syncTocActiveState() {
+  if (!tocItems.length || !tocMinimap || !tocList) return;
+  const scrollTop = preview.scrollTop;
+  const threshold = scrollTop + 80;
+
+  let activeIdx = 0;
+  for (let i = 0; i < tocItems.length; i++) {
+    if (tocItems[i].el.offsetTop <= threshold) {
+      activeIdx = i;
+    } else {
+      break;
+    }
+  }
+
+  const dashes = tocMinimap.querySelectorAll('.toc-dash');
+  const items = tocList.querySelectorAll('.toc-item');
+
+  dashes.forEach((d, i) => d.classList.toggle('active', i === activeIdx));
+  items.forEach((it, i) => {
+    const isActive = i === activeIdx;
+    it.classList.toggle('active', isActive);
+    if (isActive && tocPopover.classList.contains('open')) {
+      it.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  });
+}
+
+preview.addEventListener('scroll', () => {
+  requestAnimationFrame(syncTocActiveState);
+}, { passive: true });
+
 /* ── main update ───────────────────────── */
 function update(){
   const src = editor.value;
   hlCode.innerHTML = highlight(src)+'\n';
   preview.innerHTML = renderMarkdown(src);
+  if (typeof updateTableOfContents === 'function') updateTableOfContents();
   updateGutter(src);
   updateStats(src);
   updateTagStatus(src);

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- MD Studio v2.1.0 | 2026-08-19 -->
+<!-- MD Studio v2.2.0 | 2026-08-19 -->
 <html lang="ko" data-theme="light">
 <head>
 <meta charset="UTF-8">
@@ -657,6 +657,14 @@ mark.ov{padding:0;color:inherit;border-radius:2px;}
   user-select:none;
 }
 
+/* ── Resync Action Button (Emil Kowalski micro-interaction) ─ */
+#btnResync svg {
+  transition: transform 420ms var(--ease-out);
+}
+#btnResync:active svg {
+  transform: rotate(180deg) scale(0.92);
+}
+
 /* ── Document Outline & TOC (Emil & Apple Design) ─ */
 .editor-pane-header{gap:8px;}
 .preview-pane-header{gap:8px;}
@@ -756,7 +764,7 @@ mark.ov{padding:0;color:inherit;border-radius:2px;}
     </svg>
     <span class="brand-name">MD Studio</span>
     <span class="brand-sub">마크다운 에디터</span>
-    <span class="app-version-badge" id="appVersion">v2.1.0</span>
+    <span class="app-version-badge" id="appVersion">v2.2.0</span>
   </div>
   <div class="actions">
     <button class="ctl quiet" id="btnCopy" type="button" aria-label="전체 내용을 클립보드에 복사" data-tooltip="전체 내용을 클립보드에 복사">
@@ -777,6 +785,9 @@ mark.ov{padding:0;color:inherit;border-radius:2px;}
       <button class="ctl" id="btnTags" type="button" aria-pressed="true" aria-label="XML 태그 표시/숨기기" data-tooltip="미리보기에서 XML 태그 표시/숨기기"><span class="lbl">태그</span></button>
       <button class="ctl" id="btnHtml" type="button" aria-pressed="false" aria-label="표준 HTML 렌더링" data-tooltip="표준 HTML 렌더링 (켜기/끄기)"><span class="lbl">HTML</span></button>
       <button class="ctl" id="btnSync" type="button" aria-pressed="true" aria-label="스크롤 동기화" data-tooltip="에디터와 미리보기 스크롤 동기화"><span class="lbl">동기화</span></button>
+      <button class="ctl quiet icon" id="btnResync" type="button" aria-label="싱크 재정렬" data-tooltip="에디터와 미리보기 싱크 즉시 재정렬 (Ctrl+Alt+S)">
+        <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8a6 6 0 0 1 10.2-4.2L14 5.5"/><path d="M14 2v3.5h-3.5"/><path d="M14 8a6 6 0 0 1-10.2 4.2L2 10.5"/><path d="M2 14v-3.5h3.5"/></svg>
+      </button>
     </div>
     <button class="ctl quiet icon" id="btnTheme" type="button" aria-label="다크 모드로 전환" data-tooltip="다크 모드로 전환">
       <svg class="ico-sun" viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="3.1"/><path d="M8 1.2v1.5M8 13.3v1.5M1.2 8h1.5M13.3 8h1.5M3.2 3.2l1.1 1.1M11.7 11.7l1.1 1.1M12.8 3.2l-1.1 1.1M4.3 11.7l-1.1 1.1"/></svg>
@@ -988,11 +999,24 @@ ${e}</tr>
 Please report this to https://github.com/markedjs/marked.`,e){let s="<p>An error occurred:</p><pre>"+O(n.message+"",!0)+"</pre>";return t?Promise.resolve(s):s}if(t)return Promise.reject(n);throw n}}};var C=new D;function g(l,e){return C.parse(l,e)}g.options=g.setOptions=function(l){return C.setOptions(l),g.defaults=C.defaults,F(g.defaults),g};g.getDefaults=z;g.defaults=R;function Re(...l){return C.use(...l),g.defaults=C.defaults,F(g.defaults),g}g.use=Re;g.walkTokens=function(l,e){return C.walkTokens(l,e)};g.parseInline=C.parseInline;g.Parser=b;g.parser=b.parse;g.Renderer=y;g.TextRenderer=_;g.Lexer=x;g.lexer=x.lex;g.Tokenizer=w;g.Hooks=P;g.parse=g;var Ot=g.options,wt=g.setOptions,yt=g.walkTokens,Pt=g.parseInline,St=g,_t=b.parse,$t=x.lex;
 
 if(__exports != exports)module.exports = exports;return module.exports}));
-//# sourceMappingURL=marked.umd.js.map
-
-
 'use strict';
 const $ = s => document.querySelector(s);
+
+/* ── Programmatic scroll lock ───────────────────── */
+let isProgrammaticScroll = false;
+let progScrollTimer = null;
+
+function setProgrammaticScroll(duration = 1500){
+  isProgrammaticScroll = true;
+  clearTimeout(progScrollTimer);
+  progScrollTimer = setTimeout(()=>{ isProgrammaticScroll = false; }, duration);
+}
+
+function clearProgrammaticScroll(){
+  isProgrammaticScroll = false;
+  clearTimeout(progScrollTimer);
+}
+
 const editor = $('#editor'), hl = $('#hl'), hlCode = $('#hlCode');
 const gutterInner = $('#gutterInner'), preview = $('#preview'), toast = $('#toast');
 const tagStatus = $('#tagStatus');
@@ -1231,47 +1255,75 @@ function renderTagPanel(){
     tagList.appendChild(btn);
   });
 }
-/* 미러 div로 줄 픽셀 위치 측정 (에디터와 동일 메트릭스) */
+/* 미러 div로 줄 픽셀 위치 측정 (에디터와 100% 동일한 메트릭스) */
 let mirror = null;
-function measureLineTop(offset){
-  if (!mirror){
-    mirror = document.createElement('div');
-    mirror.setAttribute('aria-hidden','true');
-    mirror.style.cssText = 'position:absolute;top:0;left:0;visibility:hidden;white-space:pre-wrap;word-break:break-word;box-sizing:border-box;';
-    editorArea.appendChild(mirror);
-  }
+function ensureScrollMapMirror(){
+  if(mirror && mirror.parentElement) return mirror;
+  mirror = document.createElement('div');
+  mirror.setAttribute('aria-hidden','true');
+  mirror.id = 'editorMetricMirror';
+  editorArea.appendChild(mirror);
+  return mirror;
+}
+
+function syncMirrorStyle(m){
   const cs = getComputedStyle(editor);
-  mirror.style.fontFamily = cs.fontFamily;
-  mirror.style.fontSize = cs.fontSize;
-  mirror.style.lineHeight = cs.lineHeight;
-  mirror.style.padding = cs.padding;
-  mirror.style.tabSize = cs.tabSize;
-  mirror.style.width = editor.clientWidth+'px';
-  mirror.textContent = editor.value.slice(0,offset);
+  m.style.cssText = [
+    'position:absolute',
+    'left:0',
+    'top:0',
+    'visibility:hidden',
+    'pointer-events:none',
+    'box-sizing:border-box !important',
+    'margin:0 !important',
+    'border:0 !important',
+    'white-space:pre-wrap !important',
+    'word-break:break-all !important',
+    'overflow-wrap:anywhere !important',
+    'font-variant-ligatures:none !important',
+    'letter-spacing:' + (cs.letterSpacing || '0px') + ' !important',
+    'font-family:' + cs.fontFamily + ' !important',
+    'font-size:' + cs.fontSize + ' !important',
+    'line-height:' + cs.lineHeight + ' !important',
+    'tab-size:' + (cs.tabSize || '2') + ' !important',
+    'padding:' + cs.padding + ' !important',
+    'width:' + editor.clientWidth + 'px !important'
+  ].join(';') + ';';
+}
+
+function measureLineTop(offset){
+  const m = ensureScrollMapMirror();
+  syncMirrorStyle(m);
+  m.replaceChildren();
+  const safeOffset = Math.max(0, Math.min(editor.value.length, offset));
+  m.append(document.createTextNode(editor.value.slice(0, safeOffset)));
   const marker = document.createElement('span');
   marker.textContent = '\u200b';
-  mirror.appendChild(marker);
+  m.append(marker);
   return marker.offsetTop;
 }
+
 function flashLine(top){
   const f = document.createElement('div');
   f.className = 'flash-line';
-  f.style.top = top+'px';
+  f.style.top = top + 'px';
   hl.appendChild(f);
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{ f.style.opacity = '0'; }));
-  const kill = ()=>{ f.remove(); };
+  requestAnimationFrame(() => requestAnimationFrame(() => { f.style.opacity = '0'; }));
+  const kill = () => { f.remove(); };
   f.addEventListener('transitionend', kill);
-  setTimeout(kill, 1600);
+  setTimeout(kill, 1400);
 }
+
 function jumpToTag(issue){
   const top = measureLineTop(issue.offset);
   editor.focus();
-  editor.setSelectionRange(issue.offset, issue.offset+issue.len);
-  editor.scrollTo({ top:Math.max(0, top-(editor.clientHeight/2)), behavior:'smooth' });
+  editor.setSelectionRange(issue.offset, issue.offset + issue.len);
+  editor.scrollTo({ top: Math.max(0, top - (editor.clientHeight / 2)), behavior: 'smooth' });
   mirrorScroll();
-  flashLine(top);
+  waitForScrollSettled(editor, () => {
+    flashLine(top);
+  });
 }
-
 /* ── Find & replace ────────────────────── */
 /* ── 지속 하이라이트 엔진 ──────────
    에디터 오버레이(#hlCode)와 미리보기(.preview)의 텍스트를
@@ -1449,59 +1501,60 @@ replaceInput.addEventListener('keydown',(e)=>{
   if (e.key==='Enter'){ e.preventDefault(); replaceCurrent(); }
 });
 
-/* ── stable bidirectional scroll sync ───── */
-let pointerOwner = null, recentOwner = null, ownerTimer = null;
-function syncEditorGeometry(){
-  const scrollbarWidth=Math.max(0,editor.offsetWidth-editor.clientWidth);
-  hl.style.right=scrollbarWidth+'px';
+/* ── stable bidirectional scroll sync (User-Driven Autonomy Model) ───── */
+let userDrivenOwner = null;
+let userDrivenTimer = null;
+
+function markUserDriven(source, ms = 400){
+  if (isProgrammaticScroll) return;
+  userDrivenOwner = source;
+  clearTimeout(userDrivenTimer);
+  userDrivenTimer = setTimeout(()=>{ userDrivenOwner = null; }, ms);
 }
+
+function claimRecentOwner(source, ms = 400){
+  markUserDriven(source, ms);
+}
+
+function canDriveSync(source){
+  if (isProgrammaticScroll) return false;
+  return userDrivenOwner === source;
+}
+
+function syncEditorGeometry(){
+  const scrollbarWidth = Math.max(0, editor.offsetWidth - editor.clientWidth);
+  hl.style.right = scrollbarWidth + 'px';
+}
+
 function mirrorScroll(){
   syncEditorGeometry();
   hl.scrollTop = editor.scrollTop;
   hl.scrollLeft = editor.scrollLeft;
-  gutterInner.style.transform = 'translateY('+(-editor.scrollTop)+'px)';
+  gutterInner.style.transform = 'translateY(' + (-editor.scrollTop) + 'px)';
 }
-window.addEventListener('resize',syncEditorGeometry,{passive:true});
-function scrollMax(el){ return el.scrollHeight - el.clientHeight; }
-function claimRecentOwner(source,ms=180){
-  recentOwner=source;
-  clearTimeout(ownerTimer);
-  ownerTimer=setTimeout(()=>{ if (recentOwner===source) recentOwner=null; },ms);
-}
-function canDriveSync(source){
-  const owner=pointerOwner||recentOwner;
-  return !owner||owner===source;
-}
-function beginPointerOwner(source){
-  pointerOwner=source;
-  claimRecentOwner(source,500);
-}
-editor.addEventListener('pointerdown',()=>beginPointerOwner('editor'),{passive:true});
-preview.addEventListener('pointerdown',()=>beginPointerOwner('preview'),{passive:true});
-window.addEventListener('pointerup',()=>{
-  if (!pointerOwner) return;
-  const source=pointerOwner;
-  pointerOwner=null;
-  claimRecentOwner(source,220);
-},{passive:true});
-window.addEventListener('pointercancel',()=>{ pointerOwner=null; },{passive:true});
-editor.addEventListener('wheel',()=>claimRecentOwner('editor',260),{passive:true});
-preview.addEventListener('wheel',()=>claimRecentOwner('preview',260),{passive:true});
-editor.addEventListener('touchstart',()=>claimRecentOwner('editor',500),{passive:true});
-preview.addEventListener('touchstart',()=>claimRecentOwner('preview',500),{passive:true});
-editor.addEventListener('scroll',()=>{
-  mirrorScroll();
-  if (!syncOn||!canDriveSync('editor')) return;
-  claimRecentOwner('editor');
-  applyScrollRatio(preview,editor);
-},{passive:true});
-preview.addEventListener('scroll',()=>{
-  if (!syncOn||!canDriveSync('preview')) return;
-  claimRecentOwner('preview');
-  applyScrollRatio(editor,preview);
-  mirrorScroll();
-},{passive:true});
 
+window.addEventListener('resize', syncEditorGeometry, { passive: true });
+function scrollMax(el){ return el.scrollHeight - el.clientHeight; }
+
+editor.addEventListener('wheel', () => markUserDriven('editor', 300), { passive: true });
+preview.addEventListener('wheel', () => markUserDriven('preview', 300), { passive: true });
+editor.addEventListener('pointerdown', () => markUserDriven('editor', 600), { passive: true });
+preview.addEventListener('pointerdown', () => markUserDriven('preview', 600), { passive: true });
+editor.addEventListener('touchstart', () => markUserDriven('editor', 600), { passive: true });
+preview.addEventListener('touchstart', () => markUserDriven('preview', 600), { passive: true });
+editor.addEventListener('keydown', () => markUserDriven('editor', 400), { passive: true });
+
+editor.addEventListener('scroll', () => {
+  mirrorScroll();
+  if (!syncOn || !canDriveSync('editor')) return;
+  applyScrollRatio(preview, editor);
+}, { passive: true });
+
+preview.addEventListener('scroll', () => {
+  if (!syncOn || !canDriveSync('preview')) return;
+  applyScrollRatio(editor, preview);
+  mirrorScroll();
+}, { passive: true });
 /* ── main update ───────────────────────── */
 editor.addEventListener('input', update);
 document.addEventListener('selectionchange', ()=>{ if (document.activeElement===editor) updateCursor(); });
@@ -1627,6 +1680,8 @@ btnHtml.addEventListener('click', ()=>{
   update();
 });
 btnSync.addEventListener('click', ()=>{ syncOn = !syncOn; store.set(LS.sync, syncOn?'on':'off'); applyToggles(); });
+const btnResync = $('#btnResync');
+if(btnResync) btnResync.addEventListener('click', resyncNow);
 
 function setTheme(t){
   document.documentElement.dataset.theme = t;
@@ -2011,7 +2066,7 @@ preview.addEventListener('scroll', hideMemoBubble);
 
 
 /* ── MD Studio v2 unified document engine ───────────────────────── */
-const APP_VERSION = '2.1.0';
+const APP_VERSION = '2.2.0';
 const HTML_FLOW_ROOTS = new Set(('html head body title base link meta style address article aside footer header h1 h2 h3 h4 h5 h6 main nav section blockquote div dd dl dt figcaption figure hr li menu ol p pre ul table thead tbody tfoot tr th td form fieldset details dialog summary figure picture video audio canvas svg math template script textarea object iframe portal search center marquee').split(' '));
 const RAW_TEXT_TAGS = new Set(['script','style','textarea','title','xmp']);
 let docModel = { source:'', blocks:[], headings:[], scrollAnchors:[] };
@@ -2043,6 +2098,21 @@ function readHtmlToken(src,start){
   }
   let i=start+1,closing=false;
   if(src[i]==='/'){closing=true;i++;}
+  ['heading','paragraph','blockquote','list','table','hr'].forEach(name=>{
+  const base=V2_BASE_RENDERER[name];
+  V2_RENDERER[name]=function(token){return wrapRenderedBlock(token,base.call(this,token));};
+});
+V2_RENDERER.code=function(token){
+  const lang=(token.lang||'').match(/^\S*/)[0];
+  const code=token.text;
+  const langBadge=lang?'<span class="code-lang">'+escapeHtml(lang)+'</span>':'';
+  const pre='<pre class="code-block">'+langBadge+'<code class="language-'+escapeHtml(lang)+'">'+escapeHtml(code)+'</code></pre>\n';
+  return wrapRenderedBlock(token,pre);
+};
+V2_RENDERER.html=function(token){
+  const html=htmlOn?token.raw:renderTagSourceAsChips(token.raw);
+  return wrapRenderedBlock(token,html);
+};
   while(src[i]===' '||src[i]==='\t'||src[i]==='\n'||src[i]==='\r')i++;
   const ns=i;
   while(i<src.length&&/[A-Za-z0-9:._-]/.test(src[i]))i++;
@@ -2319,11 +2389,67 @@ function updateTableOfContents(){
   sample.forEach(({h,i})=>{const m=document.createElement('span');m.className='outline-marker'+(h.level===Math.min(...headings.map(x=>x.level))?' major':'');m.dataset.idx=i;m.style.top=Math.min(100,Math.max(0,previewYForBlock(h)/Math.max(1,preview.scrollHeight)*100))+'%';markers.appendChild(m);});
   syncTocActiveState();
 }
+
+function waitForScrollSettled(container, callback, maxWait = 950){
+  let lastPos = container.scrollTop;
+  let settledCount = 0;
+  let start = performance.now();
+  let timer = 0;
+
+  function check(){
+    const current = container.scrollTop;
+    if(Math.abs(current - lastPos) < 1.0){
+      settledCount++;
+      if(settledCount >= 3 || (performance.now() - start > maxWait)){
+        callback();
+        return;
+      }
+    } else {
+      settledCount = 0;
+      lastPos = current;
+    }
+    timer = requestAnimationFrame(check);
+  }
+  setTimeout(() => { timer = requestAnimationFrame(check); }, 50);
+}
+
+function triggerArriveFeedback(h, ey){
+  if(h && h.el){
+    h.el.classList.remove('source-flash');
+    void h.el.offsetWidth;
+    h.el.classList.add('source-flash');
+    setTimeout(() => { if(h.el) h.el.classList.remove('source-flash'); }, 950);
+  }
+  flashLine(ey);
+}
+
 function jumpToHeading(idx){
   const h=docModel.headings[idx];if(!h)return;
-  const py=Math.max(0,previewYForBlock(h)-22),ey=editorYForSource(h.start);
-  claimRecentOwner('preview',500);preview.scrollTo({top:py,behavior:'smooth'});editor.setSelectionRange(h.start,h.start);editor.focus({preventScroll:true});editor.scrollTo({top:Math.max(0,ey-editor.clientHeight*.24),behavior:'smooth'});mirrorScroll();updateCursor();
-  h.el.classList.remove('source-flash');void h.el.offsetWidth;h.el.classList.add('source-flash');setTimeout(()=>h.el&&h.el.classList.remove('source-flash'),950);flashLine(ey);highlightActiveToc(idx);
+  const py=Math.max(0,previewYForBlock(h)-20);
+  const ey=measureLineTop(h.start);
+  
+  // Lock bidirectional scroll sync during programmatic jump
+  setProgrammaticScroll(1500);
+  
+  preview.scrollTo({top:py,behavior:'smooth'});
+  editor.setSelectionRange(h.start,h.start);
+  editor.focus({preventScroll:true});
+  editor.scrollTo({top:Math.max(0,ey-editor.clientHeight*0.20),behavior:'smooth'});
+  mirrorScroll();
+  updateCursor();
+  highlightActiveToc(idx);
+  
+  // Emil Kowalski animation principle: trigger arrival flash only after smooth scroll settles
+  let previewDone = false, editorDone = false;
+  const onDone = () => {
+    if(previewDone && editorDone){
+      clearProgrammaticScroll();
+      triggerArriveFeedback(h, ey);
+    }
+  };
+  
+  waitForScrollSettled(preview, () => { previewDone = true; onDone(); });
+  waitForScrollSettled(editor, () => { editorDone = true; onDone(); });
 }
 function highlightActiveToc(idx){
   $('#tocList').querySelectorAll('.outline-item').forEach(x=>x.classList.toggle('active',+x.dataset.idx===idx));
@@ -2337,24 +2463,66 @@ function syncTocActiveState(){
   highlightActiveToc(idx);const max=Math.max(1,preview.scrollHeight-preview.clientHeight);$('#outlineProgress').style.setProperty('--progress',Math.max(0,Math.min(100,preview.scrollTop/max*100))+'%');
 }
 
-function ensureScrollMapMirror(){
-  if(scrollMapMirror)return scrollMapMirror;
-  scrollMapMirror=document.createElement('div');scrollMapMirror.setAttribute('aria-hidden','true');editorArea.appendChild(scrollMapMirror);return scrollMapMirror;
-}
-function styleMetricMirror(m){
-  const cs=getComputedStyle(editor);m.style.cssText='position:absolute;left:0;top:0;visibility:hidden;pointer-events:none;white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word;box-sizing:border-box;';
-  m.style.fontFamily=cs.fontFamily;m.style.fontSize=cs.fontSize;m.style.fontWeight=cs.fontWeight;m.style.lineHeight=cs.lineHeight;m.style.letterSpacing=cs.letterSpacing;m.style.padding=cs.padding;m.style.tabSize=cs.tabSize;m.style.width=editor.clientWidth+'px';
-}
 function rebuildScrollMap(){
-  const mirror=ensureScrollMapMirror();styleMetricMirror(mirror);mirror.replaceChildren();
-  const usable=docModel.blocks.filter(b=>b.el).sort((a,b)=>a.start-b.start);const points=[];let cursor=0;
-  for(const b of usable){if(b.start<cursor)continue;mirror.append(document.createTextNode(docModel.source.slice(cursor,b.start)));const mark=document.createElement('i');mark.dataset.block=String(b.id);mark.textContent='\u200b';mirror.append(mark);points.push({block:b,mark});cursor=b.start;}
-  mirror.append(document.createTextNode(docModel.source.slice(cursor)));
+  const m=ensureScrollMapMirror();syncMirrorStyle(m);m.replaceChildren();
+  const usable=docModel.blocks.filter(b=>b.el).sort((a,b)=>a.start-b.start);
+  const points=[];
+  let cursor=0;
+  
+  for(const b of usable){
+    if(b.start<cursor)continue;
+    m.append(document.createTextNode(docModel.source.slice(cursor,b.start)));
+    const mark=document.createElement('i');
+    mark.dataset.block=String(b.id);
+    mark.textContent='\u200b';
+    m.append(mark);
+    points.push({source:b.start,mark,previewY:previewYForBlock(b)});
+    cursor=b.start;
+    
+    // Multi-resolution sub-anchoring for large blocks (>600 chars)
+    const blockSize = b.end - b.start;
+    if(blockSize > 600 && b.el){
+      const rawBlock = docModel.source.slice(b.start, b.end);
+      const subLines = rawBlock.split('\n');
+      let subOffset = b.start;
+      let lineAcc = 0;
+      for(let li = 0; li < subLines.length; li++){
+        const lineLen = subLines[li].length + 1;
+        lineAcc += lineLen;
+        if(lineAcc >= 450 && (subOffset + lineAcc < b.end)){
+          const curSub = subOffset + lineAcc;
+          m.append(document.createTextNode(docModel.source.slice(cursor, curSub)));
+          const subMark = document.createElement('i');
+          subMark.textContent = '\u200b';
+          m.append(subMark);
+          const relRatio = (curSub - b.start) / blockSize;
+          const py = previewYForBlock(b) + (b.el.offsetHeight || 0) * relRatio;
+          points.push({ source: curSub, mark: subMark, previewY: py });
+          cursor = curSub;
+          lineAcc = 0;
+        }
+      }
+    }
+  }
+  m.append(document.createTextNode(docModel.source.slice(cursor)));
+  
   const anchors=[{source:0,editorY:0,previewY:0}];
-  for(const p of points){anchors.push({source:p.block.start,editorY:p.mark.offsetTop,previewY:previewYForBlock(p.block)});}
-  anchors.push({source:docModel.source.length,editorY:Math.max(editor.scrollHeight,mirror.scrollHeight),previewY:preview.scrollHeight});
-  anchors.sort((a,b)=>a.source-b.source);docModel.scrollAnchors=anchors;
+  for(const p of points){
+    anchors.push({
+      source:p.source,
+      editorY:p.mark.offsetTop,
+      previewY:p.previewY
+    });
+  }
+  anchors.push({
+    source:docModel.source.length,
+    editorY:Math.max(editor.scrollHeight,m.scrollHeight),
+    previewY:preview.scrollHeight
+  });
+  anchors.sort((a,b)=>a.source-b.source);
+  docModel.scrollAnchors=anchors;
 }
+
 function interpolateMap(value,fromKey,toKey){
   const a=docModel.scrollAnchors;if(a.length<2)return 0;
   if(value<=a[0][fromKey])return a[0][toKey];
@@ -2365,11 +2533,41 @@ function editorYForSource(offset){return interpolateMap(offset,'source','editorY
 function sourceForEditorY(y){return interpolateMap(y,'editorY','source');}
 function sourceForPreviewY(y){return interpolateMap(y,'previewY','source');}
 function previewYForSource(offset){return interpolateMap(offset,'source','previewY');}
+
 function applyScrollRatio(dst,src){
   if(docModel.scrollAnchors.length<2){const sm=scrollMax(src),dm=scrollMax(dst);if(sm>0&&dm>0)dst.scrollTop=src.scrollTop/sm*dm;return;}
-  const sf=.24;
-  if(src===editor){const sy=sourceForEditorY(editor.scrollTop+editor.clientHeight*sf);dst.scrollTop=Math.max(0,Math.min(scrollMax(dst),previewYForSource(sy)-dst.clientHeight*sf));}
-  else{const sy=sourceForPreviewY(preview.scrollTop+preview.clientHeight*sf);dst.scrollTop=Math.max(0,Math.min(scrollMax(dst),editorYForSource(sy)-dst.clientHeight*sf));}
+  // Dynamic smooth viewport fraction (0 at top, 0.5 in middle, 1.0 at bottom)
+  const progress = Math.max(0, Math.min(1, src.scrollTop / Math.max(1, scrollMax(src))));
+  const sf = 0.15 + 0.20 * progress;
+  if(src===editor){
+    const sy=sourceForEditorY(editor.scrollTop+editor.clientHeight*sf);
+    dst.scrollTop=Math.max(0,Math.min(scrollMax(dst),previewYForSource(sy)-dst.clientHeight*sf));
+  }else{
+    const sy=sourceForPreviewY(preview.scrollTop+preview.clientHeight*sf);
+    dst.scrollTop=Math.max(0,Math.min(scrollMax(dst),editorYForSource(sy)-dst.clientHeight*sf));
+  }
+}
+
+function resyncNow(){
+  const btn=$('#btnResync');
+  if(btn){
+    const svg=btn.querySelector('svg');
+    if(svg){
+      svg.style.transform='rotate(360deg)';
+      setTimeout(()=>{svg.style.transform='';},420);
+    }
+  }
+  rebuildScrollMap();
+  updateTableOfContents();
+  const owner=userDrivenOwner||(document.activeElement===editor?'editor':'preview');
+  if(owner==='editor'){
+    markUserDriven('editor',400);
+    applyScrollRatio(preview,editor);
+  }else{
+    markUserDriven('preview',400);
+    applyScrollRatio(editor,preview);
+  }
+  showToast('에디터와 미리보기 싱크가 완벽히 정렬되었습니다.');
 }
 
 function closestBlockFromNode(node){
@@ -2510,18 +2708,21 @@ function handlePreviewCursorClick(e){
   if(!block)return;
   const pos=sourceOffsetForCaret(block,caret.node,caret.offset);
   const top=measureLineTop(pos);
+  
+  setProgrammaticScroll(1000);
   editor.focus({preventScroll:true});
   editor.setSelectionRange(pos,pos);
-  claimRecentOwner('editor',360);
-  editor.scrollTo({top:Math.max(0,top-editor.clientHeight*.28),behavior:'smooth'});
+  editor.scrollTo({top:Math.max(0,top-editor.clientHeight*0.25),behavior:'smooth'});
   mirrorScroll();
   updateCursor();
-  flashLine(top);
+  waitForScrollSettled(editor, () => {
+    clearProgrammaticScroll();
+    flashLine(top);
+  });
 }
 previewContent.addEventListener('click',handlePreviewCursorClick);
 previewContent.addEventListener('submit',e=>e.preventDefault());
 window.addEventListener('resize',()=>requestAnimationFrame(()=>{rebuildScrollMap();updateTableOfContents();}),{passive:true});
-
 function highlightLargeDocument(src){
   return escapeHtml(src).replace(/^(#{1,6}\s.*)$/gm,'<span class="tk-h">$1</span>');
 }
@@ -2533,7 +2734,7 @@ function commitUpdate(src){
   updateGutter(src);updateStats(src);updateTagStatus(src);mirrorScroll();
   if(memos.length)renderMemoHighlights();else renderMemoCountUi();
   if(findOpen)refreshFind(false);else paintFindHighlights();
-  requestAnimationFrame(()=>{rebuildScrollMap();updateTableOfContents();if(syncOn){const owner=pointerOwner||recentOwner;if(owner==='preview')applyScrollRatio(editor,preview);else applyScrollRatio(preview,editor);}});
+  requestAnimationFrame(()=>{rebuildScrollMap();updateTableOfContents();if(syncOn){const owner=userDrivenOwner;if(owner==='preview')applyScrollRatio(editor,preview);else applyScrollRatio(preview,editor);}});
 }
 function update(){
   const src=editor.value;clearTimeout(saveTimer);saveTimer=setTimeout(()=>store.set(LS.content,src),300);

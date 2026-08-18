@@ -999,6 +999,7 @@ if(__exports != exports)module.exports = exports;return module.exports}));
 'use strict';
 const $ = s => document.querySelector(s);
 
+
 /* ── Programmatic scroll lock ───────────────────── */
 let isProgrammaticScroll = false;
 let progScrollTimer = null;
@@ -1044,11 +1045,20 @@ const findPrev = $('#findPrev'), findNext = $('#findNext'), findClose = $('#find
 const replaceOne = $('#replaceOne'), replaceAll = $('#replaceAll');
 const workspace = $('#workspace'), editorPane = $('#editorPane'), divider = $('#divider');
 
+/* ── Active Pane Tracking for Resync ───── */
+let lastActivePane = 'editor';
+editor.addEventListener('mouseenter', () => { lastActivePane = 'editor'; }, { passive: true });
+preview.addEventListener('mouseenter', () => { lastActivePane = 'preview'; }, { passive: true });
+editor.addEventListener('focus', () => { lastActivePane = 'editor'; }, { passive: true });
+editor.addEventListener('pointerdown', () => { lastActivePane = 'editor'; }, { passive: true });
+preview.addEventListener('pointerdown', () => { lastActivePane = 'preview'; }, { passive: true });
+
+
 const PREVIEW_STYLE_V2 = `
 :host{display:block;min-height:100%;color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.65;}
 #previewContent{min-height:100%;padding:26px 38px 96px;overflow-wrap:anywhere;word-break:normal;}
 
-md-block{display:contents;}
+md-block{display:block;margin:0;padding:0;}
 h1{font-size:1.72em;margin:.35em 0 .5em;line-height:1.28;letter-spacing:-.012em}h2{font-size:1.42em;margin:1.2em 0 .4em;line-height:1.35}h3{font-size:1.2em;margin:1.15em 0 .35em}h4,h5,h6{font-size:1.05em;margin:1em 0 .3em}p{margin:.5em 0}ul,ol{margin:.4em 0;padding-left:1.5em}li{margin:.15em 0}blockquote{margin:.65em 0;padding:.1em 0 .1em 1em;border-left:3px solid color-mix(in srgb,var(--accent) 40%,transparent);color:var(--text-sec)}
 /* ── Distinct Inline Code vs Fenced Code Blocks ── */
 code{font-family:var(--ed-font);font-size:.86em;background:var(--surface2);color:var(--text);padding:.14em .38em;border-radius:4px;border:1px solid color-mix(in srgb,var(--border) 60%,transparent);white-space:break-spaces;vertical-align:baseline;}
@@ -2461,63 +2471,46 @@ function syncTocActiveState(){
 }
 
 function rebuildScrollMap(){
-  const m=ensureScrollMapMirror();syncMirrorStyle(m);m.replaceChildren();
-  const usable=docModel.blocks.filter(b=>b.el).sort((a,b)=>a.start-b.start);
-  const points=[];
-  let cursor=0;
+  const usable = docModel.blocks.filter(b => b.el).sort((a, b) => a.start - b.start);
+  const anchors = [{ source: 0, editorY: 0, previewY: 0 }];
   
   for(const b of usable){
-    if(b.start<cursor)continue;
-    m.append(document.createTextNode(docModel.source.slice(cursor,b.start)));
-    const mark=document.createElement('i');
-    mark.dataset.block=String(b.id);
-    mark.textContent='\u200b';
-    m.append(mark);
-    points.push({source:b.start,mark,previewY:previewYForBlock(b)});
-    cursor=b.start;
+    const py = previewYForBlock(b);
+    const ey = measureLineTop(b.start);
+    anchors.push({ source: b.start, editorY: ey, previewY: py });
     
-    // Multi-resolution sub-anchoring for large blocks (>600 chars)
+    // Sub-anchoring for huge blocks (> 1000 chars)
     const blockSize = b.end - b.start;
-    if(blockSize > 600 && b.el){
-      const rawBlock = docModel.source.slice(b.start, b.end);
-      const subLines = rawBlock.split('\n');
-      let subOffset = b.start;
-      let lineAcc = 0;
-      for(let li = 0; li < subLines.length; li++){
-        const lineLen = subLines[li].length + 1;
-        lineAcc += lineLen;
-        if(lineAcc >= 450 && (subOffset + lineAcc < b.end)){
-          const curSub = subOffset + lineAcc;
-          m.append(document.createTextNode(docModel.source.slice(cursor, curSub)));
-          const subMark = document.createElement('i');
-          subMark.textContent = '\u200b';
-          m.append(subMark);
-          const relRatio = (curSub - b.start) / blockSize;
-          const py = previewYForBlock(b) + (b.el.offsetHeight || 0) * relRatio;
-          points.push({ source: curSub, mark: subMark, previewY: py });
-          cursor = curSub;
-          lineAcc = 0;
-        }
+    if(blockSize > 1000 && b.el){
+      const blockHeight = b.el.offsetHeight || 0;
+      const step = 800;
+      for(let sub = b.start + step; sub < b.end - 200; sub += step){
+        const subEy = measureLineTop(sub);
+        const ratio = (sub - b.start) / blockSize;
+        const subPy = py + blockHeight * ratio;
+        anchors.push({ source: sub, editorY: subEy, previewY: subPy });
       }
     }
   }
-  m.append(document.createTextNode(docModel.source.slice(cursor)));
   
-  const anchors=[{source:0,editorY:0,previewY:0}];
-  for(const p of points){
-    anchors.push({
-      source:p.source,
-      editorY:p.mark.offsetTop,
-      previewY:p.previewY
-    });
-  }
   anchors.push({
-    source:docModel.source.length,
-    editorY:Math.max(editor.scrollHeight,m.scrollHeight),
-    previewY:preview.scrollHeight
+    source: docModel.source.length,
+    editorY: editor.scrollHeight,
+    previewY: preview.scrollHeight
   });
-  anchors.sort((a,b)=>a.source-b.source);
-  docModel.scrollAnchors=anchors;
+  
+  anchors.sort((a, b) => a.source - b.source);
+  
+  // Deduplicate and ensure strict monotonicity
+  const clean = [anchors[0]];
+  for(let i = 1; i < anchors.length; i++){
+    const cur = anchors[i];
+    const prev = clean[clean.length - 1];
+    if(cur.source > prev.source && cur.editorY >= prev.editorY && cur.previewY >= prev.previewY){
+      clean.push(cur);
+    }
+  }
+  docModel.scrollAnchors = clean;
 }
 
 function interpolateMap(value,fromKey,toKey){
@@ -2554,17 +2547,31 @@ function resyncNow(){
       setTimeout(()=>{svg.style.transform='';},420);
     }
   }
+  
   rebuildScrollMap();
   updateTableOfContents();
-  const owner=userDrivenOwner||(document.activeElement===editor?'editor':'preview');
-  if(owner==='editor'){
-    markUserDriven('editor',400);
-    applyScrollRatio(preview,editor);
-  }else{
-    markUserDriven('preview',400);
-    applyScrollRatio(editor,preview);
+  
+  // Lock scroll sync during 1-shot alignment
+  setProgrammaticScroll(600);
+  
+  const sourcePane = lastActivePane || (document.activeElement === editor ? 'editor' : 'preview');
+  
+  if(sourcePane === 'editor'){
+    const sy = sourceForEditorY(editor.scrollTop + editor.clientHeight * 0.35);
+    const targetPy = Math.max(0, Math.min(scrollMax(preview), previewYForSource(sy) - preview.clientHeight * 0.35));
+    preview.scrollTo({ top: targetPy, behavior: 'auto' });
+    clearProgrammaticScroll();
+    triggerArriveFeedback({ el: closestBlockFromNode(previewShadow.elementFromPoint(preview.clientWidth/2, preview.clientHeight*0.35)) }, editor.scrollTop);
+  } else {
+    const sy = sourceForPreviewY(preview.scrollTop + preview.clientHeight * 0.35);
+    const targetEy = Math.max(0, Math.min(scrollMax(editor), editorYForSource(sy) - editor.clientHeight * 0.35));
+    editor.scrollTo({ top: targetEy, behavior: 'auto' });
+    mirrorScroll();
+    clearProgrammaticScroll();
+    flashLine(targetEy + editor.clientHeight * 0.35);
   }
-  showToast('에디터와 미리보기 싱크가 완벽히 정렬되었습니다.');
+  
+  showToast('현재 위치 기준으로 싱크가 1회 즉시 정렬되었습니다.');
 }
 
 function closestBlockFromNode(node){

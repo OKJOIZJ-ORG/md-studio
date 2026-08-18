@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- MD Studio v1.4.2 · 2026-08-18 -->
+<!-- MD Studio v1.4.3 · 2026-08-18 -->
 <html lang="ko" data-theme="light">
 <head>
 <meta charset="UTF-8">
@@ -579,23 +579,15 @@ mark.ov{padding:0;color:inherit;border-radius:2px;}
 }
 
 /* ── HTML 5 & Block Elements in Preview ── */
+/* ── Clean details & summary defaults without color interference ── */
 .preview details {
-  margin: 0.8em 0;
-  padding: 8px 12px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  transition: background-color 120ms ease;
-}
-.preview details[open] {
-  background: var(--surface);
+  border: 0;
+  background: transparent;
 }
 .preview summary {
-  font-weight: 600;
   cursor: pointer;
   outline: 0;
   user-select: none;
-  padding: 2px 0;
 }
 .preview summary::-webkit-details-marker {
   color: var(--accent);
@@ -815,11 +807,11 @@ function tagIndex(name){
 function tagChipHtml(slash,name,attrs){
   return '<span class="xml-chip c'+tagIndex(name.toLowerCase())+'">&lt;'+slash+name+attrs+'&gt;</span>';
 }
-const HTML_STANDARD_TAGS = new Set(('html head body title base link meta style address article aside footer header h1 h2 h3 h4 h5 h6 main nav section blockquote div dd dl dt figcaption figure hr li menu ol p pre ul a abbr b bdi bdo br cite code data dfn em i kbd mark q rp rt ruby s samp small span strong sub sup time u var wbr area audio img map track video embed object picture source canvas caption col colgroup table tbody td tfoot th thead tr button datalist fieldset form input label legend meter optgroup option output progress select textarea details dialog summary slot template iframe noscript script param svg path circle rect line polygon polyline g text b i').split(' '));
+const HTML_STANDARD_TAGS = new Set(('html head body title base link meta style address article aside footer header h1 h2 h3 h4 h5 h6 main nav section blockquote div dd dl dt figcaption figure hr li menu ol p pre ul a abbr b bdi bdo br cite code data dfn em i kbd mark q rp rt ruby s samp small span strong sub sup time u var wbr area audio img map track video embed object picture source canvas caption col colgroup table tbody td tfoot th thead tr button datalist fieldset form input label legend meter optgroup option output progress select textarea details dialog summary slot template iframe noscript script param svg path circle rect line polygon polyline g text b i style').split(' '));
 const HTML_VOID_TAGS = new Set(('area base br col embed hr img input link meta param source track wbr').split(' '));
-const SAFE_HTML_TAGS = new Set(('a abbr address article aside audio b bdi bdo blockquote br button canvas caption cite code col colgroup data datalist dd del details dfn dialog div dl dt em fieldset figcaption figure footer form h1 h2 h3 h4 h5 h6 header hr i iframe img input ins kbd label legend li main map mark menu meter nav ol optgroup option output p picture pre progress q rp rt ruby s samp section select small source span strong sub summary sup svg path circle rect line polygon polyline g text table tbody td textarea tfoot th thead time tr track u ul var video wbr').split(' '));
-const HTML_BLOCK_TAGS = new Set(('div section article aside header footer nav main details summary figure figcaption blockquote table thead tbody tfoot tr th td ul ol li p pre hr h1 h2 h3 h4 h5 h6 dl dt dd form fieldset dialog address center video audio canvas iframe picture svg colgroup caption menu').split(' '));
-const SAFE_HTML_ATTRS = new Set(('alt align aria-label aria-hidden aria-expanded aria-haspopup aria-pressed aria-current autoplay bgcolor border cellpadding cellspacing checked class colgroup colspan controls data-tooltip data-shortcut data-theme data-id data-line dir disabled download fill height href id lang loading loop muted open playsinline points poster preload readonly rel reversed role rowspan rows cols rx ry scope selected span src start stroke stroke-linecap stroke-linejoin stroke-width style target title type value valign viewBox width x x1 x2 y y1 y2 zoom').split(' '));
+const SAFE_HTML_TAGS = new Set(('a abbr address article aside audio b bdi bdo blockquote br button canvas caption cite code col colgroup data datalist dd del details dfn dialog div dl dt em fieldset figcaption figure footer form h1 h2 h3 h4 h5 h6 header hr i iframe img input ins kbd label legend li main map mark menu meter nav ol optgroup option output p picture pre progress q rp rt ruby s samp section select small source span strong sub summary sup svg path circle rect line polygon polyline g text table tbody td textarea tfoot th thead time tr track u ul var video wbr style').split(' '));
+const HTML_BLOCK_TAGS = new Set(('div section article aside header footer nav main details summary figure figcaption blockquote table thead tbody tfoot tr th td ul ol li p pre hr h1 h2 h3 h4 h5 h6 dl dt dd form fieldset dialog address center video audio canvas iframe picture svg colgroup caption menu style').split(' '));
+const SAFE_HTML_ATTRS = new Set(('alt align aria-label aria-hidden aria-expanded aria-haspopup aria-pressed aria-current autoplay bgcolor border cellpadding cellspacing checked class colgroup colspan controls data-tooltip data-shortcut data-theme data-id data-line dir disabled download fill height href id lang loading loop muted open playsinline points poster preload readonly rel reversed role rowspan rows cols rx ry scope selected span src start stroke stroke-linecap stroke-linejoin stroke-width style target title type value valign viewBox width x x1 x2 y y1 y2 zoom clip-path').split(' '));
 
 function safeHtmlUrl(value,kind){
   const v=value.trim();
@@ -864,6 +856,19 @@ function sanitizeHtmlTag(slash,name,rawAttrs){
   return '<'+tag+clean+'>';
 }
 
+/* ── Pure HTML Block Sanitizer (No Markdown corruption) ── */
+function sanitizeRawHtml(htmlString){
+  if (!htmlOn) return escapeHtml(htmlString);
+  return htmlString.replace(/<(\/?)([A-Za-z][\w:.-]*)((?:\s+[:\w-]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'=<>`]+))?)*\s*\/?)>/g, (match, slash, tagName, attrs) => {
+    const sanitized = sanitizeHtmlTag(slash, tagName, attrs);
+    if (sanitized !== null) return sanitized;
+    if (tagsOn) {
+      return tagChipHtml(slash, tagName, attrs);
+    }
+    return '';
+  }).replace(/\\{([^{}\n]+)\\}/g, '{$1}').replace(/\\/g, '');
+}
+
 /* ── inline markdown ───────────────────── */
 function renderInline(text){
   const codes = [], htmlTags = [], tagChips = [];
@@ -882,7 +887,7 @@ function renderInline(text){
     tagChips.push(tagChipHtml(sl,n,a));
     return '\u0003'+(tagChips.length-1)+'\u0003';
   });
-  t = t.replace(/\\{([^{}\n]+)\\}/g, '{$1}');
+  t = t.replace(/\\{([^{}\n]+)\\}/g, '{$1}').replace(/\\/g, '');
   t = t.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, '<img alt="$1" src="$2" loading="lazy">');
   t = t.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
   t = t.replace(/\*\*([^\n]+?)\*\*/g, '<strong>$1</strong>');
@@ -894,36 +899,6 @@ function renderInline(text){
   t = t.replace(/\u0002(\d+)\u0002/g, (m,i)=>htmlTags[+i]);
   t = t.replace(/\u0003(\d+)\u0003/g, (m,i)=>tagChips[+i]);
   return t;
-}
-
-/* ── block markdown with Stack-based HTML Parser ── */
-function parseHtmlBlock(lines, startIdx){
-  const firstLine = lines[startIdx];
-  const m = firstLine.match(/^\s*<([a-zA-Z][\w:.-]*)/);
-  if (!m) return { html: renderInline(firstLine), next: startIdx + 1 };
-  
-  const rootTag = m[1].toLowerCase();
-  let depth = 0;
-  const buf = [];
-  let i = startIdx;
-
-  while (i < lines.length) {
-    const line = lines[i];
-    buf.push(line);
-
-    const openMatches = line.match(new RegExp('<' + rootTag + '(?:[\\s>][\\s\\S]*?)?$', 'gi')) || [];
-    const closeMatches = line.match(new RegExp('</' + rootTag + '\\s*>', 'gi')) || [];
-
-    for (const op of openMatches) {
-      if (!op.includes('/>') && !HTML_VOID_TAGS.has(rootTag)) depth++;
-    }
-    depth -= closeMatches.length;
-
-    i++;
-    if (depth <= 0) break;
-  }
-
-  return { html: renderInline(buf.join('\n')), next: i };
 }
 
 function isBlockStart(lines,i){
@@ -1026,16 +1001,45 @@ function renderMarkdown(src){
     if (/^\s*(?:[-*+]|\d+[.)])\s+/.test(line)){
       const r = parseList(lines,i); html += r.html; i = r.next; continue;
     }
+    
+    // Standalone HTML Block detection & isolation
     if (htmlOn && /^\s*<([a-zA-Z][\w:.-]*)/.test(line)){
       const tm = line.match(/^\s*<([a-zA-Z][\w:.-]*)/);
       const tagLower = tm ? tm[1].toLowerCase() : '';
       if (HTML_BLOCK_TAGS.has(tagLower)){
-        const block = parseHtmlBlock(lines, i);
-        html += block.html;
-        i = block.next;
+        const buf = [];
+        let depth = 0;
+        let started = false;
+
+        while (i < lines.length) {
+          const curLine = lines[i];
+          buf.push(curLine);
+
+          const tagMatches = curLine.matchAll(/<(\/?)([a-zA-Z][\w:.-]*)[^>]*>/g);
+          for (const match of tagMatches) {
+            const isClose = match[1] === '/';
+            const name = match[2].toLowerCase();
+            const isSelfClosing = match[0].endsWith('/>') || HTML_VOID_TAGS.has(name);
+
+            if (name === tagLower) {
+              started = true;
+              if (isClose) {
+                depth--;
+              } else if (!isSelfClosing) {
+                depth++;
+              }
+            }
+          }
+
+          i++;
+          if (started && depth <= 0) break;
+        }
+
+        html += sanitizeRawHtml(buf.join('\n'));
         continue;
       }
     }
+
     const buf = [line]; i++;
     while (i<lines.length && lines[i].trim()!=='' && !isBlockStart(lines,i)){ buf.push(lines[i]); i++; }
     html += '<p>'+buf.map(renderInline).join('<br>')+'</p>';

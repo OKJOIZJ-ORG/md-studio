@@ -2,7 +2,7 @@
 
 선형 HTML 세그먼트 스캐너, Shadow DOM 격리, 적응형 목차(TOC) & 스크롤스파이, 정밀 텍스트 노드 매핑 캐럿 네비게이션, 사용자 주도 양방향 차등 스크롤 동기화, 원클릭 싱크 재정렬, 마크다운 표-XML 태그 렉서 경계 가드를 지원하는 단일 파일 마크다운 에디터
 
-- **버전**: 2.3.0
+- **버전**: 2.3.1
 - **라이브 URL**: [https://okjoizj-org.github.io/md-studio/](https://okjoizj-org.github.io/md-studio/)
 
 ## 주요 기능

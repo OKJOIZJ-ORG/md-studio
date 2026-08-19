@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- MD Studio v2.3.1 | 2026-08-19 -->
+<!-- MD Studio v2.4.0 | 2026-08-19 -->
 <html lang="ko" data-theme="light">
 <head>
 <meta charset="UTF-8">
@@ -776,7 +776,7 @@ mark.ov{padding:0;color:inherit;border-radius:2px;}
     </svg>
     <span class="brand-name">MD Studio</span>
     <span class="brand-sub">마크다운 에디터</span>
-    <span class="app-version-badge" id="appVersion">v2.2.0</span>
+    <span class="app-version-badge" id="appVersion">v2.4.0</span>
   </div>
   <div class="actions">
     <button class="ctl quiet" id="btnCopy" type="button" aria-label="전체 내용을 클립보드에 복사" data-tooltip="전체 내용을 클립보드에 복사">
@@ -795,7 +795,7 @@ mark.ov{padding:0;color:inherit;border-radius:2px;}
     <span class="tb-div" aria-hidden="true"></span>
     <div class="seg" role="group" aria-label="표시 옵션">
       <button class="ctl" id="btnTags" type="button" aria-pressed="true" aria-label="XML 태그 표시/숨기기" data-tooltip="미리보기에서 XML 태그 표시/숨기기"><span class="lbl">태그</span></button>
-      <button class="ctl" id="btnHtml" type="button" aria-pressed="false" aria-label="표준 HTML 렌더링" data-tooltip="표준 HTML 렌더링 (켜기/끄기)"><span class="lbl">HTML</span></button>
+      <button class="ctl" id="btnHtml" type="button" aria-pressed="true" aria-label="표준 HTML 렌더링" data-tooltip="표준 HTML 렌더링 (켜기/끄기)"><span class="lbl">HTML</span></button>
       <button class="ctl" id="btnSync" type="button" aria-pressed="true" aria-label="스크롤 동기화" data-tooltip="에디터와 미리보기 스크롤 동기화"><span class="lbl">동기화</span></button>
       <button class="ctl quiet icon" id="btnResync" type="button" aria-label="싱크 재정렬" data-tooltip="에디터와 미리보기 싱크 즉시 재정렬 (Ctrl+Alt+S)">
         <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8a6 6 0 0 1 10.2-4.2L14 5.5"/><path d="M14 2v3.5h-3.5"/><path d="M14 8a6 6 0 0 1-10.2 4.2L2 10.5"/><path d="M2 14v-3.5h3.5"/></svg>
@@ -1099,7 +1099,7 @@ const store = {
   set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 };
 
-let syncOn = true, tagsOn = true, htmlOn = false, saveOpen = false, saveExt = 'md';
+let syncOn = true, tagsOn = true, htmlOn = true, saveOpen = false, saveExt = 'md';
 let lineCount = 1, saveTimer = null, toastTimer = null;
 
 /* ── utils & Core Parser (Marked GFM + Block-Level True HTML Isolation) ── */
@@ -1734,140 +1734,206 @@ divider.addEventListener('pointercancel', endDrag);
 divider.addEventListener('dblclick', ()=>{ editorPane.style.flex = '0 0 50%'; });
 
 /* ── sample & init ─────────────────────── */
-const SAMPLE = `# MD Studio — RP 시뮬레이션 & 마크다운 통합 프롬프트 랩
+const SAMPLE = `# MD Studio — 마크다운 & RP 시뮬레이션 통합 랩
 
-<details open style="margin-bottom:18px;border:1px solid var(--border);border-radius:10px;padding:12px 16px;background:var(--surface);">
-<summary style="cursor:pointer;font-weight:700;font-size:15px;color:var(--text);">⚡ MD Studio 핵심 기능 & 사용법 가이드</summary>
-<div style="margin-top:10px;font-size:13.5px;line-height:1.7;color:var(--text-sec);">
-
-- **실시간 양방향 스크롤 동기화**: 에디터와 미리보기 창의 스크롤 위치를 1:1 완벽 정밀 추적합니다.
-- **XML 태그 하이라이트 & 점프 패널**: 상단 \`태그\` 버튼을 눌러 문서 내 모든 XML 태그(\`<character>\`, \`<world>\`, \`<state_schema>\` 등)를 실시간 감지하고 원클릭으로 점프합니다.
-- **HTML 위젯 렌더링 전환**: 상단 \`HTML\` 토글로 화려한 아이폰 글래스모피즘 위젯이나 \`<details>\` 카드를 직접 렌더링하거나 안전한 XML 칩으로 전환할 수 있습니다.
-- **미리보기 메모(Memo) 시스템**: 미리보기 본문 텍스트를 드래그하면 플로팅 메모 버튼이 나타나며, 작성된 메모는 하이라이트 및 패널로 영구 보존됩니다.
-- **에디터 단축키**: \`Ctrl+B\` (굵게), \`Ctrl+I\` (기울임), \`Ctrl+K\` (링크), \`Ctrl+S\` (저장), \`Ctrl+F\` (찾기/바꾸기), \`Tab\` / \`Shift+Tab\` (들여쓰기/내어쓰기), \`F3\` (다음 검색어).
-- **다양한 포맷 내보내기**: \`.md\`, \`.txt\`, \`.markdown\`, \`.html\` 파일 다운로드 및 상단 복사 버튼을 통한 원클릭 클립보드 복사 지원.
-</div>
-</details>
-
-<rp_engine>
-Runtime language=Korean; Mind fields=English. Narrative=one contiguous long-form novel passage, never chat or commentary.
-All rules are executable: \`❌\`=hard block; \`≤\`·\`=\`·\`∈\` are exact; any CHECK failure triggers silent regeneration.
-
-<character name="아리아 벨라도나" role="고대 도서관 수호자" rank="A-Class">
-## 1. 캐릭터 프로필 (Character Profile)
-
-- **이름**: 아리아 벨라도나 (Aria Belladonna)
-- **성별 / 연령**: 여성 / 외관 20대 초반 (실제 나이 127세)
-- **직업**: 아르카나 대도서관 *루멘(Lumen)*의 총괄 사서 겸 봉인 수호자
-- **기본 착장**:
-  - \`W:흰색·실크·블라우스+검정·코르셋·베스트+남색·플리츠·롱스커트+검정·스타킹+가죽·단화+황동·회중시계+은테·안경\`
-- **성격 매트릭스**:
-  - 이성적이고 원칙주의적이며, 도서관 장서의 훼손에 대해 극도로 엄격함.
-  - 내면에는 고독감과 미지에 대한 순수한 학구열이 공존함.
-
-### 1.1 행동 및 상호작용 규칙 (Interaction Rules)
-
-| 관계 단계 | 접근 거리 | 말투 톤 | 허용 상호작용 | 태도 지침 |
-| :--- | :---: | :---: | :--- | :--- |
-| **L0 타인** | 2m 이상 | 정중한 격식체 | 단순 장서 열람 안내 | 감정 배제, 도서관 규칙 위반 시 즉각 경고 |
-| **L1 방문자** | 1~2m | 부드러운 하오체 | 지정된 일반 서고 동행 | 지적 호기심 관찰, 대화 시 안경을 고쳐 씀 |
-| **L2 조력자** | 0.5m | 친근한 존댓말 | 제한 구역 열람 허가 | 개인 연구 공유, 찻잔을 건네며 미소 |
-| **L3 동반자** | 밀착 | 나긋한 반말/혼합 | 고대 아르카나 코어 개방 | 깊은 신뢰, 위기 시 신체적 보호 우선 |
-</character>
-
-<world>
-## 2. 세계관 및 구역 정보 (World & Areas)
-
-> 고대 마도 문명과 증기 기관이 공존하는 마도 공학 도시 **루멘(Lumen)**.
-> 밤이 깊어지면 중앙 도서관의 봉인된 마도서들이 스스로 속삭이기 시작한다.
-
-| 구역 명칭 | 주요 분위기 | 위험 등급 | 출입 권한 | 특이 사항 |
-| :--- | :--- | :---: | :--- | :--- |
-| **중앙 대열람실** | 고요함, 양피지 향 | Safe (낮음) | 전원 개방 | 마법 등불 항시 점등 |
-| **고문서 서고** | 음산함, 마나 잔류 | Caution (중간) | 2급 사서 이상 | 특정 시간에 책이 스스로 위치를 변경 |
-| **지하 아르카나 코어** | 압도적 마력, 시공간 왜곡 | Danger (높음) | 수호자 전용 | 고대 봉인석이 박동하고 있음 |
-</world>
-
-<state_schema>
-## 3. 실시간 상태 위젯 (Real-time Status UI)
-
-<div style="max-width:440px;margin:12px auto;padding:16px;border-radius:24px;background:linear-gradient(160deg,#18181b 0%,#09090b 100%);border:1px solid rgba(255,255,255,0.12);box-shadow:0 18px 40px rgba(0,0,0,0.45);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#f4f4f5;">
-  <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:10px;margin-bottom:12px;">
-    <div style="display:flex;align-items:center;gap:8px;">
-      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10b981;box-shadow:0 0 8px #10b981;"></span>
-      <span style="font-size:13px;font-weight:700;letter-spacing:0.5px;color:#ffffff;">LUMEN ARCHIVE MONITOR</span>
+<div style="margin: 16px 0 28px; padding: 20px 22px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="font-size: 18px;">⚡</span>
+      <strong style="font-size: 15px; font-weight: 700; color: var(--text);">MD Studio 빠른 사용 가이드</strong>
     </div>
-    <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,0.08);color:#a1a1aa;">TURN T+1</span>
+    <span style="font-size: 11.5px; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent);">v2.4.0 Live</span>
   </div>
   
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-    <div style="padding:10px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);">
-      <div style="font-size:10.5px;font-weight:700;color:#71717a;letter-spacing:0.4px;">CURRENT LOCATION</div>
-      <div style="font-size:13px;font-weight:700;margin-top:4px;color:#ffffff;">지하 고문서 서고 3열</div>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 16px;">
+    <div style="padding: 12px 14px; border-radius: 10px; background: var(--canvas); border: 1px solid var(--border);">
+      <div style="font-weight: 700; font-size: 13px; margin-bottom: 5px; color: var(--text);">🔄 실시간 양방향 스크롤 동기화</div>
+      <div style="font-size: 12px; line-height: 1.6; color: var(--text-sec);">에디터와 미리보기 스크롤을 1:1 완벽 정밀 추적하며, 상단 <strong>동기화</strong> 토글 또는 <kbd>Ctrl+Alt+S</kbd>로 1회성 정렬을 지원합니다.</div>
     </div>
-    <div style="padding:10px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);">
-      <div style="font-size:10.5px;font-weight:700;color:#71717a;letter-spacing:0.4px;">MANA RESONANCE</div>
-      <div style="font-size:13px;font-weight:700;margin-top:4px;color:#f59e0b;">78.4% (주의)</div>
+    <div style="padding: 12px 14px; border-radius: 10px; background: var(--canvas); border: 1px solid var(--border);">
+      <div style="font-weight: 700; font-size: 13px; margin-bottom: 5px; color: var(--text);">🏷️ XML 태그 실시간 분석 & 점프</div>
+      <div style="font-size: 12px; line-height: 1.6; color: var(--text-sec);">&lt;rp_engine&gt;, &lt;character&gt;, &lt;world&gt; 등 커스텀 XML 태그를 실시간 감지하여 시각 칩으로 표시하고 상단 <strong>태그</strong> 버튼으로 즉시 점프합니다.</div>
+    </div>
+    <div style="padding: 12px 14px; border-radius: 10px; background: var(--canvas); border: 1px solid var(--border);">
+      <div style="font-weight: 700; font-size: 13px; margin-bottom: 5px; color: var(--text);">📱 HTML & 위젯 렌더링 지원</div>
+      <div style="font-size: 12px; line-height: 1.6; color: var(--text-sec);">상단 <strong>HTML</strong> 토글이 기본 켜져 있어 아이폰 글래스모피즘 상태창, 커스텀 카드, SVG 다이어그램을 실시간 렌더링합니다.</div>
+    </div>
+    <div style="padding: 12px 14px; border-radius: 10px; background: var(--canvas); border: 1px solid var(--border);">
+      <div style="font-weight: 700; font-size: 13px; margin-bottom: 5px; color: var(--text);">📝 드래그 메모 & 커서 매핑</div>
+      <div style="font-size: 12px; line-height: 1.6; color: var(--text-sec);">미리보기 텍스트를 드래그해 플로팅 메모를 작성하거나, 미리보기를 클릭하면 에디터 소스의 해당 위치로 정밀 이동합니다.</div>
     </div>
   </div>
 
-  <details open style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:8px 12px;margin-bottom:8px;">
-    <summary style="cursor:pointer;font-size:12px;font-weight:700;color:#e4e4e7;">아리아 심리 상태 (Mind Balance)</summary>
-    <div style="margin-top:8px;font-size:12.5px;line-height:1.6;color:#d4d4d8;">
-      • <strong>이성 (Reason)</strong>: 85% — 침입자의 정체와 목적을 논리적으로 파악 중.<br>
-      • <strong>경계 (Vigilance)</strong>: 60% — 손에 쥔 마도서의 방어 마법 영창 준비 완료.
+  <details style="border-top: 1px solid var(--border); padding-top: 10px;">
+    <summary style="font-size: 12.5px; font-weight: 600; color: var(--accent); cursor: pointer; user-select: none;">⌨️ 에디터 주요 단축키 일람표 확인하기</summary>
+    <div style="margin-top: 10px; overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+        <thead>
+          <tr style="background: var(--surface2); text-align: left;">
+            <th style="padding: 6px 10px; border: 1px solid var(--border);">기능</th>
+            <th style="padding: 6px 10px; border: 1px solid var(--border);">단축키 (Windows)</th>
+            <th style="padding: 6px 10px; border: 1px solid var(--border);">설명</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="padding: 5px 10px; border: 1px solid var(--border);"><strong>굵게 (Bold)</strong></td><td style="padding: 5px 10px; border: 1px solid var(--border);"><kbd>Ctrl+B</kbd></td><td style="padding: 5px 10px; border: 1px solid var(--border);">선택 영역 또는 현재 단어에 **굵게** 서식 적용</td></tr>
+          <tr><td style="padding: 5px 10px; border: 1px solid var(--border);"><strong>기울임 (Italic)</strong></td><td style="padding: 5px 10px; border: 1px solid var(--border);"><kbd>Ctrl+I</kbd></td><td style="padding: 5px 10px; border: 1px solid var(--border);">선택 영역에 *기울임* 서식 적용</td></tr>
+          <tr><td style="padding: 5px 10px; border: 1px solid var(--border);"><strong>링크 삽입</strong></td><td style="padding: 5px 10px; border: 1px solid var(--border);"><kbd>Ctrl+K</kbd></td><td style="padding: 5px 10px; border: 1px solid var(--border);">마크다운 하이퍼링크 [텍스트](url) 삽입</td></tr>
+          <tr><td style="padding: 5px 10px; border: 1px solid var(--border);"><strong>파일 저장</strong></td><td style="padding: 5px 10px; border: 1px solid var(--border);"><kbd>Ctrl+S</kbd></td><td style="padding: 5px 10px; border: 1px solid var(--border);">현재 문서를 선택된 확장자(.md/.txt/.markdown)로 다운로드</td></tr>
+          <tr><td style="padding: 5px 10px; border: 1px solid var(--border);"><strong>찾기 / 대치</strong></td><td style="padding: 5px 10px; border: 1px solid var(--border);"><kbd>Ctrl+F</kbd></td><td style="padding: 5px 10px; border: 1px solid var(--border);">텍스트 검색 및 일괄 대치 패널 열기</td></tr>
+          <tr><td style="padding: 5px 10px; border: 1px solid var(--border);"><strong>스크롤 1회성 재정렬</strong></td><td style="padding: 5px 10px; border: 1px solid var(--border);"><kbd>Ctrl+Alt+S</kbd></td><td style="padding: 5px 10px; border: 1px solid var(--border);">현재 활성 창 기준으로 반대편 창 스크롤 위치 강제 일치</td></tr>
+        </tbody>
+      </table>
     </div>
   </details>
 </div>
 
-<details><summary>Scene Metadata</summary>
-[Bg] T+1 / 2026.08.19.(수) / 23:45 / 늦은 밤 / 지하 고문서 서고 / 맑음 / 마나발광<br>
-[Cast] U<W:검정·코트+흰색·셔츠+검정·슬랙스+가죽·구두><P:서서 랜턴을 비춤><@ 서고 입구><S:비성교>; FAria<W:흰색·실크·블라우스+검정·코르셋·베스트+남색·플리츠·롱스커트+가죽·단화+은테·안경><P:사다리 위에서 뒤돌아봄><@ 서고 3열 ≈ U><S:비성교><겉차분/속경계><br>
-[Arc] 탐색(서고) / 대치 (합의종료) / 없음 // -<br>
-[Q] !:Aria 질문 @다음턴 | @:자정 경종 @08/19 24:00 | ?:결계 파동<br>
-[U] 긴장 / N/A<br>
-[Focus] Aria<br>
-</details>
+---
 
-<details><summary>Mind Cognition (English)</summary>
-[N] Aria<br>
-[C] A stranger entered the restricted archives without triggering the kinetic alarm ward.<br>
-[A] Midnight perimeter inspection in 15 minutes; core seal vibration active.<br>
-[W] Preserve forbidden archive security / determine user's arcane signature.<br>
-[T] Must interrogate immediately, but intrigued by user's undetected entrance method.<br>
-[D] Step down from the ladder, demand identification with formal composure.<br>
-</details>
+<rp_engine>
+Runtime language=Korean; Mind fields=English. Narrative=one contiguous long-form novel passage, never chat or commentary.
+All rules are executable: ❌=hard block; ⟦ ⟧ • ⦅ ⦆ are exact; any CHECK failure triggers silent regeneration.
+
+<system_prompt>
+당신은 SillyTavern / Tavern 표준 프레임워크를 기반으로 작동하는 고급 서사 시뮬레이션 엔진입니다.
+사용자({{user}})와의 실시간 상호작용 속에서 등장인물의 내면 심리, 물리적 공간의 감각적 묘사, 미세한 표정과 행동을 고밀도로 묘사합니다.
+</system_prompt>
+
+<character name="아리아 벨라도나 (Aria Belladonna)">
+## 1. 캐릭터 프로필 (Character Profile)
+- **이름**: 아리아 벨라도나 (Aria Belladonna)
+- **신분**: 금서 보관소 '루멘 아카이브(Lumen Archive)' 제3서고 수석 사서 및 기억 조율관
+- **외모**:
+  - 눈부신 백은색 단발머리에 차분하게 내려앉은 사파이어빛 눈동자.
+  - 마법 공학 렌즈가 달린 얇은 은테 안경을 가끔 코끝으로 쓸어내리는 습관.
+  - 짙은 남색 코트 드레스와 백금 라이닝, 손목에 항상 채워진 천체 시계 태엽.
+- **성격**:
+  - 냉철하고 논리정연한 언변을 구사하지만, 지적 호기심과 상대방의 감정 변화에 예민하게 반응함.
+  - 규칙과 아카이브 규율을 최우선으로 내세우면서도, {{user}}의 돌발적인 행동이나 위험에는 규칙을 어기면서까지 개입하는 모순된 내면.
+- **말투**:
+  - 격식 있는 존댓말(하십시오체와 해요체의 조화), 차분하면서도 이지적인 어조.
+  - "기록관의 책무는 단순한 관찰이지만... 당신의 궤적은 유독 연산 범위를 벗어나는군요."
+
+## 2. 행동 원칙 & 상호작용 가이드 (Directives)
+1. **내면의 이중성 묘사**: 겉으로는 차가운 사서의 태도를 유지하되, 지문 속에서 미세한 손끝의 떨림이나 시선의 흔들림을 포착할 것.
+2. **세계관 요소의 자연스러운 융합**: 아카이브 내부의 마도서 향기, 양피지 마찰음, 수정구의 파동 등 감각적 디테일을 서사에 유기적으로 배치할 것.
+3. **독립적 서사 전개**: {{user}}의 대사에 수동적으로 끌려가지 않고, 아리아 자신의 목표(기억의 왜곡 방지 및 조율)를 주체적으로 추진할 것.
+</character>
+
+<world name="루멘 아카이브 (Lumen Archive)">
+- **배경**: 인류의 모든 지식과 잊혀진 마법 문명이 봉인된 시공간 초월 서고.
+- **특수 법칙**: 아카이브 내부에서는 시간의 흐름이 외부와 격리되며, 기억의 동기화율이 낮아지면 존재의 물질적 형태가 희미해짐.
+</world>
+
+<state_schema>
+| 변수명 | 타입 | 기본값 | 설명 |
+| :--- | :--- | :--- | :--- |
+| \`{{시간}}\` | String | "심야 02:45" | 아카이브 천체 시계 기준 시각 |
+| \`{{장소}}\` | String | "제3서고 - 고대 천문학 섹션" | 현재 씬의 물리적 공간 |
+| \`{{호감도}}\` | Number | 64 | 0 ~ 100 척도 (70 이상 시 보호 본능 발현) |
+| \`{{멘탈}}\` | Number | 88 | 아리아의 이성적 통제력 수치 |
+| \`{{동기화율}}\` | Number | 92 | 아카이브와 {{user}}의 차원 동기화 백분율 |
+| \`{{심리상태}}\` | String | "경계 속의 호기심" | 한 줄 요약 심리 |
 </state_schema>
 
-<preflight_check>
-## 4. 사전 검증 게이트 (Preflight Verification)
-- [x] 모든 XML 태그가 올바른 계층 구조로 열리고 닫혔는가?
-- [x] 마크다운 표가 XML 태그와 접촉할 때 독립 블록으로 안전하게 분리되는가?
-- [x] HTML 위젯이 다크/라이트 테마 및 Shadow DOM 격리 하에서 정상 렌더링되는가?
-- [x] 에디터 및 미리보기의 스크롤 앵커가 손상 없이 동기화되는가?
-</preflight_check>
+<state_logic>
+- {{user}}가 지적인 질문을 던지거나 아리아의 연구를 도울 경우: 호감도 +3, 멘탈 +2
+- {{user}}가 금지 구역의 마도서에 함부로 손을 댈 경우: 멘탈 -5, 심리상태 = "서늘한 경고"
+- 동기화율이 70 이하로 떨어질 경우: 아리아가 즉시 조율 마법을 시전하여 신체 접촉 발생
+</state_logic>
+
+<dialogue_examples>
+**[상황 1: 늦은 밤 서고에서 마주쳤을 때]**
+*아리아는 높은 사다리 위에서 두꺼운 성도(星圖) 양피지를 정리하던 중, 아래쪽에서 들려오는 발소리에 천천히 시선을 내렸다.*
+"이 시간에 제3서고라니... 출입증의 만료 시각을 잊으신 겁니까, 아니면 단순히 길을 잃은 척하시는 겁니까?"
+*안경 너머로 사파이어빛 눈동자가 가늘어지며, 손끝으로 낡은 책장을 가볍게 톡톡 두드린다.*
+
+**[상황 2: 금지된 기억의 수정구를 건드렸을 때]**
+*서고의 푸른 불꽃이 일제히 일렁이며, 아리아의 그림자가 순식간에 당신의 앞을 가로막는다. 그녀의 차가운 손끝이 당신의 손목을 단호하게 낚아챈다.*
+"물러서세요. 그 파편에 담긴 것은 당신의 영혼이 감당할 수 있는 농도의 기억이 아닙니다."
+</dialogue_examples>
 
 <output_template>
-## 5. 턴 출력 서사 (Sample Turn Narrative)
-
-아리아는 사다리 난간을 가볍게 짚으며 고개를 돌렸다. 
-
-은테 안경 너머의 푸른 눈동자가 어둠 속에서 들어선 당신의 실루엣을 빈틈없이 훑어내렸다. 그녀의 손끝에는 방금 뽑아낸 고대 마도서의 금박 장정이 미세한 푸른빛을 발하고 있었다.
-
-"자정이 가까운 시각에 허가증도 없이 지하 서고 3열까지 발을 들이시다니요."
-
-그녀는 천천히 사다리에서 내려서며 코르셋 조끼를 정돈했다. 발소리조차 거의 나지 않는 정갈하고 통제된 걸음걸이였다.
-
-"도서관의 결계가 당신의 발걸음을 알아채지 못한 이유가 단순한 우연인지, 아니면 감추고 계신 마도 공학적 트릭 덕분인지… 확인해봐야겠습니다."
+각 응답의 마지막에는 항상 아래와 같은 실시간 아이폰 글래스모피즘 상태창 위젯을 출력합니다.
 </output_template>
-</rp_engine>`;
+</rp_engine>
+
+---
+
+## 📱 실시간 캐릭터 상태창 위젯 (iPhone Midnight Glass Widget)
+
+<details open style="margin: 20px 0; border: 1px solid rgba(255,255,255,0.12); border-radius: 18px; background: linear-gradient(145deg, #16161A 0%, #0D0D11 100%); box-shadow: 0 8px 32px 0 rgba(0,0,0,0.37); overflow: hidden; color: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <summary style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: rgba(255,255,255,0.04); cursor: pointer; user-select: none; border-bottom: 1px solid rgba(255,255,255,0.08);">
+    <div style="display: flex; align-items: center; gap: 9px;">
+      <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #00E676; box-shadow: 0 0 10px #00E676;"></span>
+      <span style="font-weight: 700; font-size: 13.5px; letter-spacing: -0.01em; color: #F5F5F7;">LUMEN ARCHIVE MONITOR</span>
+      <span style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: rgba(94,159,232,0.18); color: #5E9FE8; font-family: ui-monospace, monospace;">ACTIVE</span>
+    </div>
+    <span style="font-size: 12px; color: rgba(255,255,255,0.55);">심야 02:45 • 제3서고</span>
+  </summary>
+
+  <div style="padding: 16px 18px; display: grid; gap: 14px;">
+    <!-- Profile & Emotion -->
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #2783DE, #8A63D2); display: grid; place-items: center; font-size: 16px; font-weight: 700;">A</div>
+        <div>
+          <div style="font-size: 13px; font-weight: 700; color: #FFFFFF;">아리아 벨라도나</div>
+          <div style="font-size: 11.5px; color: rgba(255,255,255,0.6);">제3서고 수석 기억 조율관</div>
+        </div>
+      </div>
+      <div style="text-align: right;">
+        <span style="display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: rgba(138,99,210,0.22); color: #BF8EDA; border: 1px solid rgba(191,142,218,0.3);">경계 속의 호기심</span>
+      </div>
+    </div>
+
+    <!-- Status Sliders -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
+      <div style="padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+        <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;">
+          <span style="color: rgba(255,255,255,0.6);">호감도 (Affection)</span>
+          <span style="font-weight: 700; color: #5E9FE8;">64%</span>
+        </div>
+        <div style="height: 5px; border-radius: 3px; background: rgba(255,255,255,0.1); overflow: hidden;">
+          <div style="width: 64%; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #2783DE, #5E9FE8);"></div>
+        </div>
+      </div>
+
+      <div style="padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+        <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;">
+          <span style="color: rgba(255,255,255,0.6);">이성 통제력 (Mental)</span>
+          <span style="font-weight: 700; color: #72BC8F;">88%</span>
+        </div>
+        <div style="height: 5px; border-radius: 3px; background: rgba(255,255,255,0.1); overflow: hidden;">
+          <div style="width: 88%; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #46A171, #72BC8F);"></div>
+        </div>
+      </div>
+
+      <div style="padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+        <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;">
+          <span style="color: rgba(255,255,255,0.6);">차원 동기화율 (Sync)</span>
+          <span style="font-weight: 700; color: #BF8EDA;">92%</span>
+        </div>
+        <div style="height: 5px; border-radius: 3px; background: rgba(255,255,255,0.1); overflow: hidden;">
+          <div style="width: 92%; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #8A63D2, #BF8EDA);"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monologue Quote -->
+    <div style="padding: 10px 14px; border-radius: 10px; background: rgba(94,159,232,0.06); border-left: 3px solid #5E9FE8; font-size: 12px; line-height: 1.5; color: rgba(255,255,255,0.85); font-style: italic;">
+      "기록관의 책무는 단순한 관찰이지만... 당신의 궤적은 유독 연산 범위를 벗어나는군요. 이번 한 번만 특별히 열람을 허가해 드리죠."
+    </div>
+  </div>
+</details>
+`;
 
 const savedContent = store.get(LS.content);
 editor.value = savedContent!==null ? savedContent : SAMPLE;
 setTheme(store.get(LS.theme) || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 syncOn = store.get(LS.sync)!=='off';
 tagsOn = store.get(LS.tags)!=='off';
-htmlOn = store.get(LS.html)==='on';
+htmlOn = store.get(LS.html)!=='off';
 saveExt = ['md','txt','markdown'].includes(store.get(LS.ext)) ? store.get(LS.ext) : 'md';
 /* ── 메모: 미리보기 드래그 → 기록 ────── */
 let memos = [];
@@ -2170,7 +2236,7 @@ preview.addEventListener('scroll', hideMemoBubble);
 
 
 /* ── MD Studio v2 unified document engine ───────────────────────── */
-const APP_VERSION = '2.3.1';
+const APP_VERSION = '2.4.0';
 const HTML_FLOW_ROOTS = new Set(('html head body title base link meta style address article aside footer header h1 h2 h3 h4 h5 h6 main nav section blockquote div dd dl dt figcaption figure hr li menu ol p pre ul table thead tbody tfoot tr th td form fieldset details dialog summary figure picture video audio canvas svg math template script textarea object iframe portal search center marquee').split(' '));
 const RAW_TEXT_TAGS = new Set(['script','style','textarea','title','xmp']);
 let docModel = { source:'', blocks:[], headings:[], scrollAnchors:[] };
@@ -2321,9 +2387,25 @@ function wrapRenderedBlock(token,html){
   V2_RENDERER[name]=function(token){return wrapRenderedBlock(token,base.call(this,token));};
 });
 V2_RENDERER.html=function(token){
-  const html=htmlOn?token.raw:renderTagSourceAsChips(token.raw);
+  let html;
+  if(!htmlOn){
+    html=renderTagSourceAsChips(token.raw);
+  }else{
+    const tokenObj=readHtmlToken(token.raw,0);
+    if(tokenObj&&isCustomXmlTag(tokenObj.name)){
+      html=renderTagSourceAsChips(token.raw);
+    }else{
+      html=token.raw;
+    }
+  }
   return wrapRenderedBlock(token,html);
 };
+
+function isCustomXmlTag(name){
+  if(!name)return false;
+  const n=name.toLowerCase().trim();
+  return !HTML_STANDARD_TAGS.has(n)&&!n.includes('-');
+}
 
 function protectMarkdownTags(raw,mode){
   const tags=[];let out='',i=0,fence=null;
@@ -2340,10 +2422,16 @@ function protectMarkdownTags(raw,mode){
     }
     if(raw[i]==='<'){
       const token=readHtmlToken(raw,i);
-      const protect=token&&(mode==='all'||(!HTML_STANDARD_TAGS.has(token.name)&&!token.name.includes('-')));
-      if(protect){
-        const len=token.end-i,marker='\uE000'+'\uE001'.repeat(Math.max(1,len-2))+'\uE002';
-        tags.push({raw:token.raw,chip:mode==='all'});out+=marker.slice(0,len);i=token.end;continue;
+      if(token){
+        const custom=isCustomXmlTag(token.name);
+        const protect=token&&(mode==='all'||custom);
+        if(protect){
+          const len=token.end-i,marker='\uE000'+'\uE001'.repeat(Math.max(1,len-2))+'\uE002';
+          tags.push({raw:token.raw,isCustom:custom,name:token.name});
+          out+=marker.slice(0,len);
+          i=token.end;
+          continue;
+        }
       }
     }
     out+=raw[i++];
@@ -2352,7 +2440,12 @@ function protectMarkdownTags(raw,mode){
 }
 function restoreMarkdownTags(html,tags){
   let idx=0;
-  return html.replace(/\uE000\uE001+\uE002/g,()=>{const t=tags[idx++];return t?(t.chip?renderTagSourceAsChips(t.raw):t.raw):'';});
+  return html.replace(/\uE000\uE001+\uE002/g,()=>{
+    const t=tags[idx++];
+    if(!t)return '';
+    if(!htmlOn||t.isCustom||isCustomXmlTag(t.name))return renderTagSourceAsChips(t.raw);
+    return t.raw;
+  });
 }
 function renderMarkdownTokens(segment,blocks){
   const protectedInput=protectMarkdownTags(segment.raw,htmlOn?'custom':'all');
@@ -2607,17 +2700,29 @@ function sourceForPreviewY(y){return interpolateMap(y,'previewY','source');}
 function previewYForSource(offset){return interpolateMap(offset,'source','previewY');}
 
 function applyScrollRatio(dst,src){
-  if(docModel.scrollAnchors.length<2){const sm=scrollMax(src),dm=scrollMax(dst);if(sm>0&&dm>0)dst.scrollTop=src.scrollTop/sm*dm;return;}
-  // Dynamic smooth viewport fraction (0 at top, 0.5 in middle, 1.0 at bottom)
-  const progress = Math.max(0, Math.min(1, src.scrollTop / Math.max(1, scrollMax(src))));
+  const sm=scrollMax(src),dm=scrollMax(dst);
+  if(sm<=0||dm<=0)return;
+  if(src.scrollTop<=2){dst.scrollTop=0;return;}
+  if(src.scrollTop>=sm-2){dst.scrollTop=dm;return;}
+  if(docModel.scrollAnchors.length<2){dst.scrollTop=src.scrollTop/sm*dm;return;}
+  const progress = Math.max(0, Math.min(1, src.scrollTop / sm));
   const sf = 0.15 + 0.20 * progress;
+  let targetY;
   if(src===editor){
-    const sy=sourceForEditorY(editor.scrollTop+editor.clientHeight*sf);
-    dst.scrollTop=Math.max(0,Math.min(scrollMax(dst),previewYForSource(sy)-dst.clientHeight*sf));
+    const sy=sourceForEditorY(src.scrollTop+src.clientHeight*sf);
+    targetY=previewYForSource(sy)-dst.clientHeight*sf;
   }else{
-    const sy=sourceForPreviewY(preview.scrollTop+preview.clientHeight*sf);
-    dst.scrollTop=Math.max(0,Math.min(scrollMax(dst),editorYForSource(sy)-dst.clientHeight*sf));
+    const sy=sourceForPreviewY(src.scrollTop+src.clientHeight*sf);
+    targetY=editorYForSource(sy)-dst.clientHeight*sf;
   }
+  if(progress<0.12){
+    const blend=progress/0.12;
+    targetY=targetY*blend;
+  }else if(progress>0.88){
+    const blend=(progress-0.88)/0.12;
+    targetY=targetY*(1-blend)+dm*blend;
+  }
+  dst.scrollTop=Math.max(0,Math.min(dm,targetY));
 }
 
 function resyncNow(){

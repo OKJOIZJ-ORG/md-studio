@@ -1,44 +1,54 @@
 <!DOCTYPE html>
-<!-- MD Studio v2.2.0 | 2026-08-19 -->
+<!-- MD Studio v2.3.0 | 2026-08-19 -->
 <html lang="ko" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MD Studio — 마크다운 에디터</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='20%25' y1='0%25' x2='80%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23323236'/%3E%3Cstop offset='50%25' stop-color='%231C1C1F'/%3E%3Cstop offset='100%25' stop-color='%230A0A0C'/%3E%3C/linearGradient%3E%3CradialGradient id='t' cx='35%25' cy='0%25' r='65%25'%3E%3Cstop offset='0%25' stop-color='%23FFFFFF' stop-opacity='0.38'/%3E%3Cstop offset='100%25' stop-color='%23FFFFFF' stop-opacity='0'/%3E%3C/radialGradient%3E%3ClinearGradient id='s' x1='0%25' y1='0%25' x2='0%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23FFFFFF'/%3E%3Cstop offset='60%25' stop-color='%23F4F4F5'/%3E%3Cstop offset='100%25' stop-color='%23D4D4D8'/%3E%3C/linearGradient%3E%3Cfilter id='sh' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeDropShadow dx='0' dy='1.2' stdDeviation='1.0' flood-color='%23000000' flood-opacity='0.60'/%3E%3C/filter%3E%3C/defs%3E%3Crect width='32' height='32' rx='7.16' fill='url(%23g)'/%3E%3Crect width='32' height='32' rx='7.16' fill='url(%23t)'/%3E%3Crect x='0.6' y='0.6' width='30.8' height='30.8' rx='6.8' fill='none' stroke='%23FFFFFF' stroke-width='0.8' stroke-opacity='0.25'/%3E%3Cg transform='translate(6, 6) scale(1.25)' filter='url(%23sh)'%3E%3Crect x='1.2' y='1.2' width='13.6' height='13.6' rx='3.2' fill='none' stroke='url(%23s)' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cline x1='8' y1='2.4' x2='8' y2='13.6' stroke='url(%23s)' stroke-width='1.5' stroke-linecap='round'/%3E%3Cline x1='3.6' y1='5.6' x2='6.0' y2='5.6' stroke='url(%23s)' stroke-width='1.0' stroke-linecap='round' opacity='0.85'/%3E%3Cline x1='3.6' y1='8.2' x2='5.4' y2='8.2' stroke='url(%23s)' stroke-width='1.0' stroke-linecap='round' opacity='0.85'/%3E%3Cline x1='3.6' y1='10.8' x2='6.2' y2='10.8' stroke='url(%23s)' stroke-width='1.0' stroke-linecap='round' opacity='0.85'/%3E%3Cline x1='10.0' y1='5.6' x2='12.4' y2='5.6' stroke='url(%23s)' stroke-width='1.2' stroke-linecap='round' opacity='0.95'/%3E%3Cline x1='10.0' y1='8.2' x2='11.8' y2='8.2' stroke='url(%23s)' stroke-width='1.0' stroke-linecap='round' opacity='0.75'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<meta name="theme-color" content="#18181B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MD Studio">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
 :root{
   --ease-out:cubic-bezier(0.23,1,0.32,1);
-  --text:#2C2C2B; --text-sec:#7D7A75;
-  --canvas:#FFFFFF; --surface:#F9F8F7; --surface2:#F0EFED;
-  --border:#E6E5E3;
-  --accent:#2783DE; --accent-soft:#E5F2FC;
-  --green:#46A171; --green-soft:#E8F1EC;
-  --orange:#D5803B; --orange-soft:#FBEBDE;
-  --red:#E56458; --red-soft:#FCE9E7;
-  --purple:#8A63D2;
+  --text:#18181B; --text-sec:#71717A;
+  --canvas:#FFFFFF; --surface:#FAFAFA; --surface2:#F4F4F5;
+  --border:#E4E4E7;
+  --accent:#18181B; --accent-soft:#F4F4F5;
+  --green:#10B981; --green-soft:#ECFDF5;
+  --orange:#F59E0B; --orange-soft:#FFFBEB;
+  --red:#F43F5E; --red-soft:#FFF1F2;
+  --purple:#8B5CF6;
   --raised:#FFFFFF;
-  --find-bg:rgba(255,199,64,0.52); --find-cur-bg:rgba(255,141,32,0.62);
-  --memo-bg:rgba(138,99,210,0.15); --memo-line:#8A63D2;
+  --find-bg:rgba(245,158,11,0.38); --find-cur-bg:rgba(245,158,11,0.68);
+  --memo-bg:rgba(139,92,246,0.14); --memo-line:#8B5CF6;
   --ed-font:ui-monospace,"SF Mono",Menlo,Consolas,"Noto Sans Mono CJK KR",monospace;
   --ed-size:14px; --ed-lh:1.7;
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR","Malgun Gothic",sans-serif;
-  --t0:#2783DE; --t1:#46A171; --t2:#D5803B; --t3:#E56458;
-  --t4:#8A63D2; --t5:#C14D8F; --t6:#0F8B8D; --t7:#9A7B00;
+  --t0:#18181B; --t1:#10B981; --t2:#F59E0B; --t3:#F43F5E;
+  --t4:#8B5CF6; --t5:#EC4899; --t6:#06B6D4; --t7:#EAB308;
 }
 [data-theme="dark"]{
-  --text:#FFFFFF; --text-sec:rgba(255,255,255,0.65);
-  --canvas:#191919; --surface:#202020; --surface2:#2A2A28;
-  --border:rgba(255,255,255,0.13);
-  --accent:#5E9FE8; --accent-soft:rgba(94,159,232,0.14);
-  --green:#72BC8F; --green-soft:rgba(114,188,143,0.14);
-  --orange:#DE9255; --orange-soft:rgba(222,146,85,0.16);
-  --red:#E97366; --red-soft:rgba(233,115,102,0.14);
-  --purple:#BF8EDA;
-  --raised:#383836;
-  --find-bg:rgba(240,196,96,0.36); --find-cur-bg:rgba(226,150,80,0.56);
-  --memo-bg:rgba(191,142,218,0.20); --memo-line:#BF8EDA;
-  --t0:#5E9FE8; --t1:#72BC8F; --t2:#DE9255; --t3:#E97366;
-  --t4:#BF8EDA; --t5:#DF84A8; --t6:#4FB9C9; --t7:#EAC26B;
+  --text:#F4F4F5; --text-sec:#A1A1AA;
+  --canvas:#09090B; --surface:#121215; --surface2:#1E1E24;
+  --border:rgba(255,255,255,0.09);
+  --accent:#FAFAFA; --accent-soft:rgba(255,255,255,0.12);
+  --green:#34D399; --green-soft:rgba(52,211,153,0.15);
+  --orange:#FBBF24; --orange-soft:rgba(251,191,36,0.16);
+  --red:#FB7185; --red-soft:rgba(251,113,133,0.16);
+  --purple:#A78BFA;
+  --raised:#18181B;
+  --find-bg:rgba(245,158,11,0.32); --find-cur-bg:rgba(251,191,36,0.62);
+  --memo-bg:rgba(167,139,250,0.20); --memo-line:#A78BFA;
+  --t0:#FAFAFA; --t1:#34D399; --t2:#FBBF24; --t3:#FB7185;
+  --t4:#A78BFA; --t5:#F472B6; --t6:#22D3EE; --t7:#FACC15;
 }
 *{box-sizing:border-box;}
 [hidden]{display:none !important;}
@@ -755,9 +765,14 @@ mark.ov{padding:0;color:inherit;border-radius:2px;}
 <body>
 <header class="topbar">
   <div class="brand">
-    <svg width="17" height="17" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <rect x="1.2" y="1.2" width="13.6" height="13.6" rx="3.2" stroke="currentColor" stroke-width="1.5"/>
-      <line x1="8" y1="2.6" x2="8" y2="13.4" stroke="currentColor" stroke-width="1.5"/>
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <rect x="1.2" y="1.2" width="13.6" height="13.6" rx="3.2" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      <line x1="8" y1="2.4" x2="8" y2="13.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="3.8" y1="5.6" x2="6.0" y2="5.6" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" opacity="0.85"/>
+      <line x1="3.8" y1="8.2" x2="5.4" y2="8.2" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" opacity="0.85"/>
+      <line x1="3.8" y1="10.8" x2="6.2" y2="10.8" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" opacity="0.85"/>
+      <line x1="10.0" y1="5.6" x2="12.2" y2="5.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.95"/>
+      <line x1="10.0" y1="8.2" x2="11.8" y2="8.2" stroke="currentColor" stroke-width="1.0" stroke-linecap="round" opacity="0.75"/>
     </svg>
     <span class="brand-name">MD Studio</span>
     <span class="brand-sub">마크다운 에디터</span>
@@ -956,9 +971,7 @@ ${f}`,r=r.substring(0,r.length-T.text.length)+M.text;break}else if(k?.type==="li
 `+q.slice(f);else{if(T||h.replace(this.rules.other.tabCharGlobal,"    ").search(this.rules.other.nonSpaceChar)>=4||re.test(h)||se.test(h)||M.test(h))break;c+=`
 `+k}T=!k.trim(),u+=N+`
 `,e=e.substring(N.length+1),h=q.slice(f)}}r.loose||(o?r.loose=!0:this.rules.other.doubleBlankLine.test(u)&&(o=!0)),r.items.push({type:"list_item",raw:u,task:!!this.options.gfm&&this.rules.other.listIsTask.test(c),loose:!1,text:c,tokens:[]}),r.raw+=u}let p=r.items.at(-1);if(p)p.raw=p.raw.trimEnd(),p.text=p.text.trimEnd();else return;r.raw=r.raw.trimEnd();for(let a of r.items)if(this.lexer.state.top=!1,a.tokens=this.lexer.blockTokens(a.text,[]),!r.loose){let u=a.tokens.filter(h=>h.type==="space"),c=u.length>0&&u.some(h=>this.rules.other.anyLine.test(h.raw));r.loose=c}for(let a of r.items){let u=a.tokens[0];if(a.task&&(u?.type==="text"||u?.type==="paragraph")){a.text=a.text.replace(this.rules.other.listReplaceTask,""),u.raw=u.raw.replace(this.rules.other.listReplaceTask,""),u.text=u.text.replace(this.rules.other.listReplaceTask,"");for(let h=this.lexer.inlineQueue.length-1;h>=0;h--)if(this.rules.other.listIsTask.test(this.lexer.inlineQueue[h].src)){this.lexer.inlineQueue[h].src=this.lexer.inlineQueue[h].src.replace(this.rules.other.listReplaceTask,"");break}let c=this.rules.other.listTaskCheckbox.exec(a.raw);if(c){let h={type:"checkbox",raw:c[0]+" ",checked:c[0]!=="[ ]"};a.checked=h.checked,r.loose?a.tokens[0]&&["paragraph","text"].includes(a.tokens[0].type)&&"tokens"in a.tokens[0]&&a.tokens[0].tokens?(a.tokens[0].raw=h.raw+a.tokens[0].raw,a.tokens[0].text=h.raw+a.tokens[0].text,a.tokens[0].tokens.unshift(h)):a.tokens.unshift({type:"paragraph",raw:h.raw,text:h.raw,tokens:[h]}):a.tokens.unshift(h)}}else a.task&&(a.task=!1)}if(r.loose)for(let a of r.items){a.loose=!0;for(let u of a.tokens)u.type==="text"&&(u.type="paragraph")}return r}}html(e){let t=this.rules.block.html.exec(e);if(t){let n=ne(t[0]);return{type:"html",block:!0,raw:n,pre:t[1]==="pre"||t[1]==="script"||t[1]==="style",text:n}}}def(e){let t=this.rules.block.def.exec(e);if(t){let n=t[1].toLowerCase().replace(this.rules.other.multipleSpaceGlobal," "),s=t[2]?t[2].replace(this.rules.other.hrefBrackets,"$1").replace(this.rules.inline.anyPunctuation,"$1"):"",r=t[3]?t[3].substring(1,t[3].length-1).replace(this.rules.inline.anyPunctuation,"$1"):t[3];return{type:"def",tag:n,raw:L(t[0],`
-`),href:s,title:r}}}table(e){let t=this.rules.block.table.exec(e);if(!t||!this.rules.other.tableDelimiter.test(t[2]))return;let n=te(t[1]),s=t[2].replace(this.rules.other.tableAlignChars,"").split("|"),r=t[3]?.trim()?t[3].replace(this.rules.other.tableRowBlankLine,"").split(`
-`):[],i={type:"table",raw:L(t[0],`
-`),header:[],align:[],rows:[]};if(n.length===s.length){for(let o of s)this.rules.other.tableAlignRight.test(o)?i.align.push("right"):this.rules.other.tableAlignCenter.test(o)?i.align.push("center"):this.rules.other.tableAlignLeft.test(o)?i.align.push("left"):i.align.push(null);for(let o=0;o<n.length;o++)i.header.push({text:n[o],tokens:this.lexer.inline(n[o]),header:!0,align:i.align[o]});for(let o of r)i.rows.push(te(o,i.header.length).map((p,a)=>({text:p,tokens:this.lexer.inline(p),header:!1,align:i.align[a]})));return i}}lheading(e){let t=this.rules.block.lheading.exec(e);if(t){let n=t[1].trim();return{type:"heading",raw:L(t[0],`
+`),href:s,title:r}}}table(e){let t=this.rules.block.table.exec(e);if(!t||!this.rules.other.tableDelimiter.test(t[2]))return;let n=te(t[1]),s=t[2].replace(this.rules.other.tableAlignChars,"").split("|");if(n.length!==s.length)return;let a=t[3]?t[3].split("\n"):[],v=[];for(let l of a){let tr=l.trim();if(!tr)break;if(/^[\uE000-\uE002]/.test(tr)||/^<\/?([a-zA-Z0-9:._-]+|!--|!|\?)/.test(tr))break;if(!tr.includes('|'))break;if(/^ {0,3}(#{1,6}\s|>{1,3}\s|`{3,}|~{3,}|[-*+]\s|\d{1,9}[.)]\s)/.test(l))break;v.push(l)}let raw=t[1]+"\n"+t[2]+(v.length?"\n"+v.join("\n"):"");let i={type:"table",raw,header:[],align:[],rows:[]};for(let o of s)this.rules.other.tableAlignRight.test(o)?i.align.push("right"):this.rules.other.tableAlignCenter.test(o)?i.align.push("center"):this.rules.other.tableAlignLeft.test(o)?i.align.push("left"):i.align.push(null);for(let o=0;o<n.length;o++)i.header.push({text:n[o],tokens:this.lexer.inline(n[o]),header:!0,align:i.align[o]});for(let o of v)i.rows.push(te(o,i.header.length).map((p,al)=>({text:p,tokens:this.lexer.inline(p),header:!1,align:i.align[al]})));return i}lheading(e){let t=this.rules.block.lheading.exec(e);if(t){let n=t[1].trim();return{type:"heading",raw:L(t[0],`
 `),depth:t[2].charAt(0)==="="?1:2,text:n,tokens:this.lexer.inline(n)}}}paragraph(e){let t=this.rules.block.paragraph.exec(e);if(t){let n=t[1].charAt(t[1].length-1)===`
 `?t[1].slice(0,-1):t[1];return{type:"paragraph",raw:t[0],text:n,tokens:this.lexer.inline(n)}}}text(e){let t=this.rules.block.text.exec(e);if(t)return{type:"text",raw:t[0],text:t[0],tokens:this.lexer.inline(t[0])}}escape(e){let t=this.rules.inline.escape.exec(e);if(t)return{type:"escape",raw:t[0],text:t[1]}}tag(e){let t=this.rules.inline.tag.exec(e);if(t)return!this.lexer.state.inLink&&this.rules.other.startATag.test(t[0])?this.lexer.state.inLink=!0:this.lexer.state.inLink&&this.rules.other.endATag.test(t[0])&&(this.lexer.state.inLink=!1),!this.lexer.state.inRawBlock&&this.rules.other.startPreScriptTag.test(t[0])?this.lexer.state.inRawBlock=!0:this.lexer.state.inRawBlock&&this.rules.other.endPreScriptTag.test(t[0])&&(this.lexer.state.inRawBlock=!1),{type:"html",raw:t[0],inLink:this.lexer.state.inLink,inRawBlock:this.lexer.state.inRawBlock,block:!1,text:t[0]}}link(e){let t=this.rules.inline.link.exec(e);if(t){let n=t[2].trim();if(!this.options.pedantic&&this.rules.other.startAngleBracket.test(n)){if(!this.rules.other.endAngleBracket.test(n))return;let i=L(n.slice(0,-1),"\\");if((n.length-i.length)%2===0)return}else{let i=me(t[2],"()");if(i===-2)return;if(i>-1){let p=(t[0].indexOf("!")===0?5:4)+t[1].length+i;t[2]=t[2].substring(0,i),t[0]=t[0].substring(0,p).trim(),t[3]=""}}let s=t[2],r="";if(this.options.pedantic){let i=this.rules.other.pedanticHrefTitle.exec(s);i&&(s=i[1],r=i[3])}else r=t[3]?t[3].slice(1,-1):"";return s=s.trim(),this.rules.other.startAngleBracket.test(s)&&(this.options.pedantic&&!this.rules.other.endAngleBracket.test(n)?s=s.slice(1):s=s.slice(1,-1)),be(t,{href:s&&s.replace(this.rules.inline.anyPunctuation,"$1"),title:r&&r.replace(this.rules.inline.anyPunctuation,"$1")},t[0],this.lexer,this.rules)}}reflink(e,t){let n;if((n=this.rules.inline.reflink.exec(e))||(n=this.rules.inline.nolink.exec(e))){let s=(n[2]||n[1]).replace(this.rules.other.multipleSpaceGlobal," "),r=t[s.toLowerCase()];if(!r){let i=n[0].charAt(0);return{type:"text",raw:i,text:i}}return be(n,r,n[0],this.lexer,this.rules)}}emStrong(e,t,n=""){let s=this.rules.inline.emStrongLDelim.exec(e);if(!s||!s[1]&&!s[2]&&!s[3]&&!s[4]||s[4]&&n.match(this.rules.other.unicodeAlphaNumeric))return;if(!(s[1]||s[3]||"")||!n||this.rules.inline.punctuation.exec(n)){let i=[...s[0]].length-1,o,p,a=i,u=0,c=s[0][0],h=n===c,k=c==="*"?this.rules.inline.emStrongRDelimAst:this.rules.inline.emStrongRDelimUnd;for(k.lastIndex=0,t=t.slice(-1*e.length+i);(s=k.exec(t))!==null;){if(o=s[1]||s[2]||s[3]||s[4]||s[5]||s[6],!o)continue;if(p=[...o].length,s[3]||s[4]){a+=p;continue}else if(s[5]||s[6]){if(i%3&&!((i+p)%3)){u+=p;continue}if(h)break}if(a-=p,a>0)continue;p=Math.min(p,p+a+u);let T=[...s[0]][0].length,f=e.slice(0,i+s.index+T+p);if(Math.min(i,p)%2){let M=f.slice(1,-1);return{type:"em",raw:f,text:M,tokens:this.lexer.inlineTokens(M)}}let S=f.slice(2,-2);return{type:"strong",raw:f,text:S,tokens:this.lexer.inlineTokens(S)}}}}codespan(e){let t=this.rules.inline.code.exec(e);if(t){let n=t[2].replace(this.rules.other.newLineCharGlobal," "),s=this.rules.other.nonSpaceChar.test(n),r=this.rules.other.startingSpaceChar.test(n)&&this.rules.other.endingSpaceChar.test(n);return s&&r&&(n=n.substring(1,n.length-1)),{type:"codespan",raw:t[0],text:n}}}br(e){let t=this.rules.inline.br.exec(e);if(t)return{type:"br",raw:t[0]}}del(e,t,n=""){let s=this.rules.inline.delLDelim.exec(e);if(!s)return;if(!(s[1]||"")||!n||this.rules.inline.punctuation.exec(n)){let i=[...s[0]].length-1,o,p,a=i,u=this.rules.inline.delRDelim;for(u.lastIndex=0,t=t.slice(-1*e.length+i);(s=u.exec(t))!==null;){if(o=s[1]||s[2]||s[3]||s[4]||s[5]||s[6],!o||(p=[...o].length,p!==i))continue;if(s[3]||s[4]){a+=p;continue}if(a-=p,a>0)continue;p=Math.min(p,p+a);let c=[...s[0]][0].length,h=e.slice(0,i+s.index+c+p),k=h.slice(i,-i);return{type:"del",raw:h,text:k,tokens:this.lexer.inlineTokens(k)}}}}autolink(e){let t=this.rules.inline.autolink.exec(e);if(t){let n,s;return t[2]==="@"?(n=t[1],s="mailto:"+n):(n=t[1],s=n),{type:"link",raw:t[0],text:n,href:s,tokens:[{type:"text",raw:n,text:n}]}}}url(e){let t;if(t=this.rules.inline.url.exec(e)){let n,s;if(t[2]==="@")n=t[0],s="mailto:"+n;else{let r;do r=t[0],t[0]=this.rules.inline._backpedal.exec(t[0])?.[0]??"";while(r!==t[0]);n=t[0],t[1]==="www."?s="http://"+t[0]:s=t[0]}return{type:"link",raw:t[0],text:n,href:s,tokens:[{type:"text",raw:n,text:n}]}}}inlineText(e){let t=this.rules.inline.text.exec(e);if(t){let n=this.lexer.state.inRawBlock;return{type:"text",raw:t[0],text:t[0],escaped:n}}}};var x=class l{tokens;options;state;inlineQueue;tokenizer;constructor(e){this.tokens=[],this.tokens.links=Object.create(null),this.options=e||R,this.options.tokenizer=this.options.tokenizer||new w,this.tokenizer=this.options.tokenizer,this.tokenizer.options=this.options,this.tokenizer.lexer=this,this.inlineQueue=[],this.state={inLink:!1,inRawBlock:!1,top:!0};let t={other:m,block:Z.normal,inline:B.normal};this.options.pedantic?(t.block=Z.pedantic,t.inline=B.pedantic):this.options.gfm&&(t.block=Z.gfm,this.options.breaks?t.inline=B.breaks:t.inline=B.gfm),this.tokenizer.rules=t}static get rules(){return{block:Z,inline:B}}static lex(e,t){return new l(t).lex(e)}static lexInline(e,t){return new l(t).inlineTokens(e)}lex(e){e=e.replace(m.carriageReturn,`
 `),this.blockTokens(e,this.tokens);for(let t=0;t<this.inlineQueue.length;t++){let n=this.inlineQueue[t];this.inlineTokens(n.src,n.tokens)}return this.inlineQueue=[],this.tokens}blockTokens(e,t=[],n=!1){this.tokenizer.lexer=this,this.options.pedantic&&(e=e.replace(m.tabCharGlobal,"    ").replace(m.spaceLine,""));let s=1/0;for(;e;){if(e.length<s)s=e.length;else{this.infiniteLoopError(e.charCodeAt(0));break}let r;if(this.options.extensions?.block?.some(o=>(r=o.call({lexer:this},e,t))?(e=e.substring(r.raw.length),t.push(r),!0):!1))continue;if(r=this.tokenizer.space(e)){e=e.substring(r.raw.length);let o=t.at(-1);r.raw.length===1&&o!==void 0?o.raw+=`
@@ -1721,49 +1734,133 @@ divider.addEventListener('pointercancel', endDrag);
 divider.addEventListener('dblclick', ()=>{ editorPane.style.flex = '0 0 50%'; });
 
 /* ── sample & init ─────────────────────── */
-const SAMPLE = `# RP 프롬프트: 달빛 도서관의 현자
+const SAMPLE = `# MD Studio — RP 시뮬레이션 & 마크다운 통합 프롬프트 랩
 
-<character name="아리아" age="127" role="고대 도서관의 수호자">
-## 캐릭터 설정
-- **이름**: 아리아 벨라도나
-- **직업**: 고대 도서관 *루멘 아르카나*의 수호자
-- **성격**: 차분함, 논리적, 가끔 ~~독설에 가까운~~ 솔직한 조언
-  - 후손에게는 한없이 다정함
-  - 도서관 규칙에는 철저함
+<details open style="margin-bottom:18px;border:1px solid var(--border);border-radius:10px;padding:12px 16px;background:var(--surface);">
+<summary style="cursor:pointer;font-weight:700;font-size:15px;color:var(--text);">⚡ MD Studio 핵심 기능 & 사용법 가이드</summary>
+<div style="margin-top:10px;font-size:13.5px;line-height:1.7;color:var(--text-sec);">
 
-### 말투 규칙
-1. 존댓말 사용, 문장 끝을 부드럽게
-2. 비유를 즐겨 사용
-- [x] 캐릭터 카드 작성
-- [ ] 금지 행동 목록 추가
+- **실시간 양방향 스크롤 동기화**: 에디터와 미리보기 창의 스크롤 위치를 1:1 완벽 정밀 추적합니다.
+- **XML 태그 하이라이트 & 점프 패널**: 상단 \`태그\` 버튼을 눌러 문서 내 모든 XML 태그(\`<character>\`, \`<world>\`, \`<state_schema>\` 등)를 실시간 감지하고 원클릭으로 점프합니다.
+- **HTML 위젯 렌더링 전환**: 상단 \`HTML\` 토글로 화려한 아이폰 글래스모피즘 위젯이나 \`<details>\` 카드를 직접 렌더링하거나 안전한 XML 칩으로 전환할 수 있습니다.
+- **미리보기 메모(Memo) 시스템**: 미리보기 본문 텍스트를 드래그하면 플로팅 메모 버튼이 나타나며, 작성된 메모는 하이라이트 및 패널로 영구 보존됩니다.
+- **에디터 단축키**: \`Ctrl+B\` (굵게), \`Ctrl+I\` (기울임), \`Ctrl+K\` (링크), \`Ctrl+S\` (저장), \`Ctrl+F\` (찾기/바꾸기), \`Tab\` / \`Shift+Tab\` (들여쓰기/내어쓰기), \`F3\` (다음 검색어).
+- **다양한 포맷 내보내기**: \`.md\`, \`.txt\`, \`.markdown\`, \`.html\` 파일 다운로드 및 상단 복사 버튼을 통한 원클릭 클립보드 복사 지원.
+</div>
+</details>
+
+<rp_engine>
+Runtime language=Korean; Mind fields=English. Narrative=one contiguous long-form novel passage, never chat or commentary.
+All rules are executable: \`❌\`=hard block; \`≤\`·\`=\`·\`∈\` are exact; any CHECK failure triggers silent regeneration.
+
+<character name="아리아 벨라도나" role="고대 도서관 수호자" rank="A-Class">
+## 1. 캐릭터 프로필 (Character Profile)
+
+- **이름**: 아리아 벨라도나 (Aria Belladonna)
+- **성별 / 연령**: 여성 / 외관 20대 초반 (실제 나이 127세)
+- **직업**: 아르카나 대도서관 *루멘(Lumen)*의 총괄 사서 겸 봉인 수호자
+- **기본 착장**:
+  - \`W:흰색·실크·블라우스+검정·코르셋·베스트+남색·플리츠·롱스커트+검정·스타킹+가죽·단화+황동·회중시계+은테·안경\`
+- **성격 매트릭스**:
+  - 이성적이고 원칙주의적이며, 도서관 장서의 훼손에 대해 극도로 엄격함.
+  - 내면에는 고독감과 미지에 대한 순수한 학구열이 공존함.
+
+### 1.1 행동 및 상호작용 규칙 (Interaction Rules)
+
+| 관계 단계 | 접근 거리 | 말투 톤 | 허용 상호작용 | 태도 지침 |
+| :--- | :---: | :---: | :--- | :--- |
+| **L0 타인** | 2m 이상 | 정중한 격식체 | 단순 장서 열람 안내 | 감정 배제, 도서관 규칙 위반 시 즉각 경고 |
+| **L1 방문자** | 1~2m | 부드러운 하오체 | 지정된 일반 서고 동행 | 지적 호기심 관찰, 대화 시 안경을 고쳐 씀 |
+| **L2 조력자** | 0.5m | 친근한 존댓말 | 제한 구역 열람 허가 | 개인 연구 공유, 찻잔을 건네며 미소 |
+| **L3 동반자** | 밀착 | 나긋한 반말/혼합 | 고대 아르카나 코어 개방 | 깊은 신뢰, 위기 시 신체적 보호 우선 |
 </character>
 
 <world>
-## 세계관
-> 마법과 과학이 공존하는 도시 **루멘**.
-> 밤이 되면 도서관의 책들이 속삭이기 시작한다.
+## 2. 세계관 및 구역 정보 (World & Areas)
 
-| 장소 | 분위기 | 위험도 |
-| --- | --- | --- |
-| 중앙 홀 | 고요 | 낮음 |
-| 지하 서고 | 음산 | 높음 |
+> 고대 마도 문명과 증기 기관이 공존하는 마도 공학 도시 **루멘(Lumen)**.
+> 밤이 깊어지면 중앙 도서관의 봉인된 마도서들이 스스로 속삭이기 시작한다.
+
+| 구역 명칭 | 주요 분위기 | 위험 등급 | 출입 권한 | 특이 사항 |
+| :--- | :--- | :---: | :--- | :--- |
+| **중앙 대열람실** | 고요함, 양피지 향 | Safe (낮음) | 전원 개방 | 마법 등불 항시 점등 |
+| **고문서 서고** | 음산함, 마나 잔류 | Caution (중간) | 2급 사서 이상 | 특정 시간에 책이 스스로 위치를 변경 |
+| **지하 아르카나 코어** | 압도적 마력, 시공간 왜곡 | Danger (높음) | 수호자 전용 | 고대 봉인석이 박동하고 있음 |
 </world>
 
-<scenario>
-## 시나리오 훅
-사용자가 도서관에 숨어든 도둑을 쫓는 의뢰를 맡는다.
-\`난이도: 중급\` — 자세한 규칙은 아래 코드 블록 참고.
+<state_schema>
+## 3. 실시간 상태 위젯 (Real-time Status UI)
 
-\`\`\`text
-[규칙] 마법 사용 시 마나 10 소모
-[규칙] 자정 이후 외출 금지
-\`\`\`
-</scenario>
+<div style="max-width:440px;margin:12px auto;padding:16px;border-radius:24px;background:linear-gradient(160deg,#18181b 0%,#09090b 100%);border:1px solid rgba(255,255,255,0.12);box-shadow:0 18px 40px rgba(0,0,0,0.45);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#f4f4f5;">
+  <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:10px;margin-bottom:12px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10b981;box-shadow:0 0 8px #10b981;"></span>
+      <span style="font-size:13px;font-weight:700;letter-spacing:0.5px;color:#ffffff;">LUMEN ARCHIVE MONITOR</span>
+    </div>
+    <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,0.08);color:#a1a1aa;">TURN T+1</span>
+  </div>
+  
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+    <div style="padding:10px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);">
+      <div style="font-size:10.5px;font-weight:700;color:#71717a;letter-spacing:0.4px;">CURRENT LOCATION</div>
+      <div style="font-size:13px;font-weight:700;margin-top:4px;color:#ffffff;">지하 고문서 서고 3열</div>
+    </div>
+    <div style="padding:10px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);">
+      <div style="font-size:10.5px;font-weight:700;color:#71717a;letter-spacing:0.4px;">MANA RESONANCE</div>
+      <div style="font-size:13px;font-weight:700;margin-top:4px;color:#f59e0b;">78.4% (주의)</div>
+    </div>
+  </div>
 
----
+  <details open style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:8px 12px;margin-bottom:8px;">
+    <summary style="cursor:pointer;font-size:12px;font-weight:700;color:#e4e4e7;">아리아 심리 상태 (Mind Balance)</summary>
+    <div style="margin-top:8px;font-size:12.5px;line-height:1.6;color:#d4d4d8;">
+      • <strong>이성 (Reason)</strong>: 85% — 침입자의 정체와 목적을 논리적으로 파악 중.<br>
+      • <strong>경계 (Vigilance)</strong>: 60% — 손에 쥔 마도서의 방어 마법 영창 준비 완료.
+    </div>
+  </details>
+</div>
 
-여기까지가 샘플입니다. 전체를 지우고 바로 작성을 시작하면 됩니다.
-**자동 저장**되며, 단축키: \`Ctrl+B\` 굵게 | \`Ctrl+I\` 기울임 | \`Ctrl+S\` 최근 선택 형식으로 저장`;
+<details><summary>Scene Metadata</summary>
+[Bg] T+1 / 2026.08.19.(수) / 23:45 / 늦은 밤 / 지하 고문서 서고 / 맑음 / 마나발광<br>
+[Cast] U<W:검정·코트+흰색·셔츠+검정·슬랙스+가죽·구두><P:서서 랜턴을 비춤><@ 서고 입구><S:비성교>; FAria<W:흰색·실크·블라우스+검정·코르셋·베스트+남색·플리츠·롱스커트+가죽·단화+은테·안경><P:사다리 위에서 뒤돌아봄><@ 서고 3열 ≈ U><S:비성교><겉차분/속경계><br>
+[Arc] 탐색(서고) / 대치 (합의종료) / 없음 // -<br>
+[Q] !:Aria 질문 @다음턴 | @:자정 경종 @08/19 24:00 | ?:결계 파동<br>
+[U] 긴장 / N/A<br>
+[Focus] Aria<br>
+</details>
+
+<details><summary>Mind Cognition (English)</summary>
+[N] Aria<br>
+[C] A stranger entered the restricted archives without triggering the kinetic alarm ward.<br>
+[A] Midnight perimeter inspection in 15 minutes; core seal vibration active.<br>
+[W] Preserve forbidden archive security / determine user's arcane signature.<br>
+[T] Must interrogate immediately, but intrigued by user's undetected entrance method.<br>
+[D] Step down from the ladder, demand identification with formal composure.<br>
+</details>
+</state_schema>
+
+<preflight_check>
+## 4. 사전 검증 게이트 (Preflight Verification)
+- [x] 모든 XML 태그가 올바른 계층 구조로 열리고 닫혔는가?
+- [x] 마크다운 표가 XML 태그와 접촉할 때 독립 블록으로 안전하게 분리되는가?
+- [x] HTML 위젯이 다크/라이트 테마 및 Shadow DOM 격리 하에서 정상 렌더링되는가?
+- [x] 에디터 및 미리보기의 스크롤 앵커가 손상 없이 동기화되는가?
+</preflight_check>
+
+<output_template>
+## 5. 턴 출력 서사 (Sample Turn Narrative)
+
+아리아는 사다리 난간을 가볍게 짚으며 고개를 돌렸다. 
+
+은테 안경 너머의 푸른 눈동자가 어둠 속에서 들어선 당신의 실루엣을 빈틈없이 훑어내렸다. 그녀의 손끝에는 방금 뽑아낸 고대 마도서의 금박 장정이 미세한 푸른빛을 발하고 있었다.
+
+"자정이 가까운 시각에 허가증도 없이 지하 서고 3열까지 발을 들이시다니요."
+
+그녀는 천천히 사다리에서 내려서며 코르셋 조끼를 정돈했다. 발소리조차 거의 나지 않는 정갈하고 통제된 걸음걸이였다.
+
+"도서관의 결계가 당신의 발걸음을 알아채지 못한 이유가 단순한 우연인지, 아니면 감추고 계신 마도 공학적 트릭 덕분인지… 확인해봐야겠습니다."
+</output_template>
+</rp_engine>`;
 
 const savedContent = store.get(LS.content);
 editor.value = savedContent!==null ? savedContent : SAMPLE;
@@ -2073,7 +2170,7 @@ preview.addEventListener('scroll', hideMemoBubble);
 
 
 /* ── MD Studio v2 unified document engine ───────────────────────── */
-const APP_VERSION = '2.2.0';
+const APP_VERSION = '2.3.0';
 const HTML_FLOW_ROOTS = new Set(('html head body title base link meta style address article aside footer header h1 h2 h3 h4 h5 h6 main nav section blockquote div dd dl dt figcaption figure hr li menu ol p pre ul table thead tbody tfoot tr th td form fieldset details dialog summary figure picture video audio canvas svg math template script textarea object iframe portal search center marquee').split(' '));
 const RAW_TEXT_TAGS = new Set(['script','style','textarea','title','xmp']);
 let docModel = { source:'', blocks:[], headings:[], scrollAnchors:[] };
@@ -2105,21 +2202,6 @@ function readHtmlToken(src,start){
   }
   let i=start+1,closing=false;
   if(src[i]==='/'){closing=true;i++;}
-  ['heading','paragraph','blockquote','list','table','hr'].forEach(name=>{
-  const base=V2_BASE_RENDERER[name];
-  V2_RENDERER[name]=function(token){return wrapRenderedBlock(token,base.call(this,token));};
-});
-V2_RENDERER.code=function(token){
-  const lang=(token.lang||'').match(/^\S*/)[0];
-  const code=token.text;
-  const langBadge=lang?'<span class="code-lang">'+escapeHtml(lang)+'</span>':'';
-  const pre='<pre class="code-block">'+langBadge+'<code class="language-'+escapeHtml(lang)+'">'+escapeHtml(code)+'</code></pre>\n';
-  return wrapRenderedBlock(token,pre);
-};
-V2_RENDERER.html=function(token){
-  const html=htmlOn?token.raw:renderTagSourceAsChips(token.raw);
-  return wrapRenderedBlock(token,html);
-};
   while(src[i]===' '||src[i]==='\t'||src[i]==='\n'||src[i]==='\r')i++;
   const ns=i;
   while(i<src.length&&/[A-Za-z0-9:._-]/.test(src[i]))i++;
